@@ -164,95 +164,90 @@ const FoodInput: React.FC = () => {
     };
 
     return (
-        <div className="pb-5 flex flex-wrap gap-2.5">
-            <div className="relative flex-1 min-w-[150px]">
-                <input
-                    name="foodInputName"
-                    ref={inputRef}
-                    value={input}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDownAdd}
-                    onBlur={() => setTimeout(() => setMatchingFoods([]), 150)}
-                    placeholder="Enter food name"
-                    className="h-[30px] w-full text-center border border-gray-300 rounded"
-                />
-                {matchingFoods.length > 0 && (
-                    <div className="absolute z-10 w-full bg-white border border-gray-300 max-h-[150px] overflow-y-auto shadow-md">
-                        {matchingFoods.map(food => (
-                            <div
-                                key={food}
-                                onClick={() => handleDropdownClick(food)}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
-                            >
-                                {food}
-                            </div>
-                        ))}
-                    </div>
+        <div className="flex flex-col pb-5 gap-2.5">
+            <div className="flex flex-wrap gap-2.5">
+                <div className="relative flex-1 min-w-[150px]">
+                    <input
+                        name="foodInputName"
+                        ref={inputRef}
+                        value={input}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDownAdd}
+                        onBlur={() => setTimeout(() => setMatchingFoods([]), 150)}
+                        placeholder="Enter food name"
+                        className="h-[30px] w-full text-center border border-gray-300 rounded"
+                    />
+                    {matchingFoods.length > 0 && (
+                        <div className="absolute z-10 w-full bg-white border border-gray-300 max-h-[150px] overflow-y-auto shadow-md">
+                            {matchingFoods.map(food => (
+                                <div
+                                    key={food}
+                                    onClick={() => handleDropdownClick(food)}
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                >
+                                    {food}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                
+                {showCancel ? (
+                    <button 
+                        onClick={handleCancel}
+                        className="h-[36px] px-4 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                ) : (
+                    <button 
+                        onClick={handleAddFood} 
+                        disabled={!input.trim()}
+                        className="h-[36px] px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    >
+                        Add Food
+                    </button>
                 )}
-            </div>
-            
-            {showCancel ? (
-                <button 
-                    onClick={handleCancel}
-                    className="h-[36px] px-4 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                >
-                    Cancel
-                </button>
-            ) : (
-                <button 
-                    onClick={handleAddFood} 
-                    disabled={!input.trim()}
-                    className="h-[36px] px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                    Add Food
-                </button>
-            )}
 
-            <AIQueryComponent onDataReceived={handleAIData} hideResponse={hideAIResponse} />
+                <div className="ml-2">
+                    <AIQueryComponent onDataReceived={handleAIData} hideResponse={hideAIResponse} />
+                </div>
+            </div>
 
             {showForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-20">
-                    <div className="bg-white p-5 rounded-lg shadow-lg w-full max-w-md">
-                        <div className="pt-2.5 flex flex-col gap-3">
-                            <p className="mb-2">{aiDataReturned ? "We guesstimated the amount. Please Review." : "Please fill in as much as possible."}</p>
-                            
-                            <input 
-                                value={proteinInput} 
-                                onChange={handleProteinInputChange} 
-                                placeholder="Protein" 
-                                className="h-[30px] text-center border border-gray-300 rounded w-full"
-                            />
-                            
-                            <input 
-                                value={calorieInput} 
-                                onChange={handleCalorieInputChange} 
-                                placeholder="Calories" 
-                                className="h-[30px] text-center border border-gray-300 rounded w-full"
-                            />
-                            
-                            <input 
-                                value={unitInput} 
-                                onChange={(e) => setUnitInput(e.target.value)} 
-                                placeholder="Unit of Measurement" 
-                                className="h-[30px] text-center border border-gray-300 rounded w-full"
-                            />
-                            
-                            <div className="flex flex-col sm:flex-row gap-2 mt-2">
-                                <button 
-                                    onClick={handleSubmitNewFood} 
-                                    disabled={!input.trim()}
-                                    className="h-[36px] px-4 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    Submit New Food
-                                </button>
-                                
-                                <button 
-                                    onClick={handleCancel}
-                                    className="h-[36px] px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors sm:hidden"
-                                >
-                                    Cancel
-                                </button>
-                            </div>
+                <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex flex-col gap-3">
+                        <p className="mb-2">{aiDataReturned ? "We guesstimated the amount. Please Review." : "Please fill in as much as possible."}</p>
+                        
+                        <input 
+                            value={proteinInput} 
+                            onChange={handleProteinInputChange} 
+                            placeholder="Protein" 
+                            className="h-[30px] text-center border border-gray-300 rounded w-full"
+                        />
+                        
+                        <input 
+                            value={calorieInput} 
+                            onChange={handleCalorieInputChange} 
+                            placeholder="Calories" 
+                            className="h-[30px] text-center border border-gray-300 rounded w-full"
+                        />
+                        
+                        <input 
+                            value={unitInput} 
+                            onChange={(e) => setUnitInput(e.target.value)} 
+                            placeholder="Unit of Measurement" 
+                            className="h-[30px] text-center border border-gray-300 rounded w-full"
+                        />
+                        
+                        <div className="flex gap-2 mt-2">
+                            <button 
+                                onClick={handleSubmitNewFood} 
+                                disabled={!input.trim()}
+                                className="h-[36px] px-4 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Submit New Food
+                            </button>
                         </div>
                     </div>
                 </div>  

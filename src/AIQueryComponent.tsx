@@ -88,9 +88,9 @@ const AIQueryComponent: React.FC<AIQueryComponentProps> = ({ onDataReceived, hid
     };
 
     return (
-        <>
+        <div className="flex flex-col">
             <button 
-                className="ml-2.5 h-[36px] px-4 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors" 
+                className="h-[36px] px-4 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors" 
                 onClick={() => setShowAIInput(!showAIInput)}
                 disabled={isLoading}
             >
@@ -98,31 +98,29 @@ const AIQueryComponent: React.FC<AIQueryComponentProps> = ({ onDataReceived, hid
             </button>
 
             {showAIInput && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-20">
-                    <div className="bg-white p-5 rounded-lg shadow-lg w-full max-w-md">
-                        <div className="pt-2.5 flex flex-col">
-                            <input
-                                value={aiInputText}
-                                onChange={handleAIInputChange}
-                                onKeyDown={handleKeyDownAI}
-                                placeholder="Please describe the food as detailed as possible."
-                                disabled={isLoading}
-                                className="h-[50px] w-full border-0 border-b border-black bg-transparent outline-none mb-4 px-2"
-                            />
-                            <button 
-                                onClick={handleSubmitToAI} 
-                                disabled={!aiInputText.trim() || isLoading}
-                                className="h-[36px] px-4 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {isLoading ? "Processing..." : "Submit"}
-                            </button>
-                        </div>
+                <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex flex-col">
+                        <input
+                            value={aiInputText}
+                            onChange={handleAIInputChange}
+                            onKeyDown={handleKeyDownAI}
+                            placeholder="Please describe the food as detailed as possible."
+                            disabled={isLoading}
+                            className="h-[50px] w-full border-0 border-b border-black bg-transparent outline-none mb-4 px-2"
+                        />
+                        <button 
+                            onClick={handleSubmitToAI} 
+                            disabled={!aiInputText.trim() || isLoading}
+                            className="h-[36px] px-4 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {isLoading ? "Processing..." : "Submit"}
+                        </button>
                     </div>
                 </div>
             )}
 
-            {!hideResponse && <div className="pt-2.5 text-gray-700">{aiResponse}</div>}
-        </>
+            {!hideResponse && <div className="mt-2 text-gray-700">{aiResponse}</div>}
+        </div>
     );
 };
 
