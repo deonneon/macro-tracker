@@ -26,14 +26,16 @@ const App: React.FC = () => {
           <div className="flex justify-between w-full h-screen overflow-hidden">
             <div className="w-[70%] h-screen overflow-y-auto px-[5%] py-8 flex flex-col">
               {/* Your journal pages go here */}
-              <div className="w-full flex flex-col overflow-y-auto">
+              <div className="w-full flex flex-col h-full overflow-y-auto">
                 <div className="flex flex-col w-full h-full">
-                  <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
-                    <h1 className="text-2xl font-bold mb-4">Daily Macro Tracker</h1>
+                  <div className="mb-auto">
+                    <h1 className="text-2xl font-bold mb-6">Daily Macro Tracker</h1>
                     <FoodInput />
                     <DailyDietList />
                   </div>
-                  <Dashboard />
+                  <div className="mt-4">
+                    <Dashboard />
+                  </div>
                 </div>
               </div>
           

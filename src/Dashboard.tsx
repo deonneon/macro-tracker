@@ -2,25 +2,25 @@ import React, { useContext } from 'react';
 import { DietContext } from './DietContext';
 import { Line } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
 } from 'chart.js';
 
 // Register Chart.js components
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend
 );
 
 const options = {
@@ -44,7 +44,7 @@ const options = {
             ticks: {
                 display: true,
                 // Ensuring only integer values are displayed
-                callback: function(value: any) {
+                callback: function (value: any) {
                     if (typeof value === 'number' && value % 1 === 0) {
                         return value;
                     }
@@ -60,11 +60,11 @@ const options = {
 
 const Dashboard: React.FC = () => {
     const dietContext = useContext(DietContext);
-    
+
     if (!dietContext) {
         throw new Error('Dashboard must be used within a DietProvider');
     }
-    
+
     const { dailyDiet } = dietContext;
 
     const today = new Date();
@@ -138,18 +138,20 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="mt-6 p-4 bg-white rounded-lg shadow-sm">
+        <div className="p-4 bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold mb-3">Dashboard</h2>
-            <div className="flex flex-wrap gap-4 mb-4">
-                <p className="text-sm font-medium">Latest Date Total Protein: <span className="font-bold">{Math.round(latestProteinSum)}g</span></p>
-                <p className="text-sm font-medium">Latest Date Total Calories: <span className="font-bold">{Math.round(latestCalorieSum)}</span></p>
-            </div>
-            <div className="flex flex-wrap justify-between gap-4 w-full">
-                <div className="w-full lg:w-[48%] h-[300px] relative">
-                    <Line data={proteinData} options={options} />
+            <div className='flex flex-row'>
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Latest Date Total Protein: <span className="font-bold">{Math.round(latestProteinSum)}g</span></p>
+                    <p className="text-sm font-medium">Latest Date Total Calories: <span className="font-bold">{Math.round(latestCalorieSum)}</span></p>
                 </div>
-                <div className="w-full lg:w-[48%] h-[300px] relative">
-                    <Line data={calorieData} options={options} />
+                <div className="flex flex-row justify-between gap-4 w-full">
+                    <div className="w-full lg:w-[48%] h-[150px] relative">
+                        <Line data={proteinData} options={options} />
+                    </div>
+                    <div className="w-full lg:w-[48%] h-[150px] relative">
+                        <Line data={calorieData} options={options} />
+                    </div>
                 </div>
             </div>
         </div>
