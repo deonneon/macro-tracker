@@ -31,12 +31,19 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
 
   const [calories, setCalories] = useState<number>(0);
   const [errors, setErrors] = useState<Partial<Record<keyof FormMacroGoal, string>>>({});
+  const [formValid, setFormValid] = useState(true);
 
   useEffect(() => {
     // Calculate calories whenever macros change
     const totalCalories = (formData.protein * 4) + (formData.carbs * 4) + (formData.fats * 9);
     setCalories(totalCalories);
   }, [formData.protein, formData.carbs, formData.fats]);
+
+  // Check if form is valid
+  useEffect(() => {
+    const hasErrors = Object.values(errors).some(error => error !== '');
+    setFormValid(!hasErrors);
+  }, [errors]);
 
   const validateField = (name: keyof FormMacroGoal, value: number | string): string => {
     if (name === 'date') {
@@ -71,12 +78,17 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
 
     // Validate all fields
     const newErrors: Partial<Record<keyof FormMacroGoal, string>> = {};
+    let hasErrors = false;
+    
     Object.entries(formData).forEach(([key, value]) => {
       const error = validateField(key as keyof FormMacroGoal, value);
-      if (error) newErrors[key as keyof FormMacroGoal] = error;
+      if (error) {
+        newErrors[key as keyof FormMacroGoal] = error;
+        hasErrors = true;
+      }
     });
 
-    if (Object.keys(newErrors).length > 0) {
+    if (hasErrors) {
       setErrors(newErrors);
       return;
     }
@@ -191,7 +203,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
         </button>
         <button
           type="submit"
-          disabled={isLoading || Object.keys(errors).length > 0}
+          disabled={isLoading || !formValid}
           className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Saving...' : initialGoal ? 'Update Goals' : 'Save Goals'}
