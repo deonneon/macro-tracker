@@ -3,7 +3,10 @@ import React, { createContext, useState, useEffect, ReactNode } from 'react';
 interface Food {
   id: number;
   protein: number;
+  carbs: number;
+  fat: number;
   calories: number;
+  servingSize: number;
   unit: string;
 }
 
@@ -24,7 +27,15 @@ interface DietContextType {
   setDailyDiet: React.Dispatch<React.SetStateAction<DailyDietItem[]>>;
   removeFoodEntry: (index: number) => Promise<void>;
   removeFoodFromDatabase: (foodName: string) => Promise<void>;
-  addFoodToDatabase: (foodData: { name: string; protein: number; calories: number; unit: string }) => Promise<void>;
+  addFoodToDatabase: (foodData: { 
+    name: string; 
+    protein: number; 
+    carbs: number;
+    fat: number;
+    calories: number; 
+    servingSize: number;
+    unit: string 
+  }) => Promise<void>;
   addFoodEntryToDailyDiet: (foodDetails: Food & { name: string }, date: string) => Promise<void>;
 }
 
@@ -56,7 +67,10 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                     transformedData[item.name] = {
                         id: item.id,
                         protein: item.protein,
+                        carbs: item.carbs,
+                        fat: item.fat,
                         calories: item.calories,
+                        servingSize: item.servingSize,
                         unit: item.unit
                     };
                 });
@@ -108,7 +122,15 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
         await fetch(`${API_URL}/foods/${foodName}`, { method: 'DELETE' });
     };
 
-    const addFoodToDatabase = async (foodData: { name: string; protein: number; calories: number; unit: string }): Promise<void> => {
+    const addFoodToDatabase = async (foodData: { 
+      name: string; 
+      protein: number; 
+      carbs: number;
+      fat: number;
+      calories: number; 
+      servingSize: number;
+      unit: string 
+    }): Promise<void> => {
         const response = await fetch(`${API_URL}/foods`, {
             method: 'POST',
             headers: {
