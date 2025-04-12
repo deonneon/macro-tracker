@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { foodsTable, dailyDietTable, FoodItem, DailyDietWithFood } from './lib/supabase';
 
 interface Food {
   id: number;
@@ -41,7 +42,7 @@ interface DietContextType {
 
 export const DietContext = createContext<DietContextType | undefined>(undefined);
 
-// Get the appropriate API URL based on environment
+// Log configured API URL for debugging
 const API_URL = import.meta.env.DEV 
     ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
     : (import.meta.env.VITE_NETLIFY_URL || 'https://main--shimmering-figolla-53e06a.netlify.app/api');
@@ -57,20 +58,20 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
     const [database, setDatabase] = useState<FoodDatabase>({});
     const [dailyDiet, setDailyDiet] = useState<DailyDietItem[]>([]);
 
-    // Fetch initial data from server
+    // Fetch initial data from Supabase
     useEffect(() => {
-        fetch(`${API_URL}/foods`)
-            .then(res => res.json())
+        // Fetch foods from Supabase
+        foodsTable.getAll()
             .then(data => {
                 const transformedData: FoodDatabase = {};
-                data.forEach((item: any) => {
+                data.forEach((item: FoodItem) => {
                     transformedData[item.name] = {
-                        id: item.id,
+                        id: item.id || 0,
                         protein: item.protein,
-                        carbs: item.carbs,
-                        fat: item.fat,
+                        carbs: item.carbs || 0,
+                        fat: item.fat || 0,
                         calories: item.calories,
-                        servingSize: item.servingSize,
+                        servingSize: item.servingSize || 1,
                         unit: item.unit
                     };
                 });
@@ -78,9 +79,24 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
             })
             .catch(err => console.error('Failed to fetch foods:', err));
 
-        fetch(`${API_URL}/dailydiet`)
-            .then(res => res.json())
-            .then(data => setDailyDiet(data))
+        // Fetch daily diet from Supabase
+        dailyDietTable.getAll()
+            .then(data => {
+                // Transform the data to match the DailyDietItem interface
+                const transformedData = data.map(item => ({
+                    id: item.id,
+                    date: item.date,
+                    name: item.name,
+                    protein: item.protein,
+                    carbs: item.carbs || 0,
+                    fat: item.fat || 0,
+                    calories: item.calories,
+                    servingSize: 1, // Default serving size
+                    unit: item.unit,
+                    food_id: item.food_id
+                }));
+                setDailyDiet(transformedData);
+            })
             .catch(err => console.error('Failed to fetch daily diet:', err));
     }, []);
 
@@ -97,15 +113,13 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 return;
             }
 
+            // Update local state immediately for better UX
             const newDailyDiet = [...dailyDiet];
             newDailyDiet.splice(index, 1);
             setDailyDiet(newDailyDiet);
 
-            // Delete from server
-            const response = await fetch(`${API_URL}/dailydiet/${entry.id}`, { method: 'DELETE' });
-            if (!response.ok) {
-                throw new Error(`Failed to delete entry: ${response.statusText}`);
-            }
+            // Delete from Supabase
+            await dailyDietTable.delete(entry.id);
         } catch (error) {
             console.error('Error deleting daily diet entry:', error);
             // Revert the local state if the server deletion failed
@@ -114,12 +128,19 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
     };
 
     const removeFoodFromDatabase = async (foodName: string): Promise<void> => {
-        const newDatabase = { ...database };
-        delete newDatabase[foodName];
-        setDatabase(newDatabase);
+        try {
+            // Update local state immediately for better UX
+            const newDatabase = { ...database };
+            delete newDatabase[foodName];
+            setDatabase(newDatabase);
 
-        // Delete from server
-        await fetch(`${API_URL}/foods/${foodName}`, { method: 'DELETE' });
+            // Delete from Supabase
+            await foodsTable.delete(foodName);
+        } catch (error) {
+            console.error('Error deleting food from database:', error);
+            // Revert on error
+            setDatabase(database);
+        }
     };
 
     const addFoodToDatabase = async (foodData: { 
@@ -131,34 +152,54 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
       servingSize: number;
       unit: string 
     }): Promise<void> => {
-        const response = await fetch(`${API_URL}/foods`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(foodData),
-        });
-        const data = await response.json();
-        setDatabase({ ...database, [foodData.name]: data });
+        try {
+            // Add to Supabase
+            const data = await foodsTable.add({
+                name: foodData.name,
+                protein: foodData.protein,
+                carbs: foodData.carbs,
+                fat: foodData.fat,
+                calories: foodData.calories,
+                servingSize: foodData.servingSize,
+                unit: foodData.unit
+            });
+
+            // Update local state with the response from Supabase
+            setDatabase(prev => ({ 
+                ...prev, 
+                [foodData.name]: {
+                    id: data.id || 0,
+                    protein: data.protein,
+                    carbs: data.carbs || 0,
+                    fat: data.fat || 0,
+                    calories: data.calories,
+                    servingSize: data.servingSize || 1,
+                    unit: data.unit
+                }
+            }));
+        } catch (error) {
+            console.error('Error adding food to database:', error);
+        }
     };
 
     const addFoodEntryToDailyDiet = async (foodDetails: Food & { name: string }, date: string): Promise<void> => {
-        console.log({ date, food_id: foodDetails.id });
-        const response = await fetch(`${API_URL}/dailydiet`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
+        try {
+            // Add to Supabase
+            const data = await dailyDietTable.add({
                 date,
                 food_id: foodDetails.id
-            }),
-        });
+            });
 
-        if (response.ok) {
-            const data = await response.json();
-            const newEntry = { ...foodDetails, date, id: data.id };
+            // Add to local state with the response
+            const newEntry = { 
+                ...foodDetails, 
+                date, 
+                id: data.id || 0 
+            };
+            
             setDailyDiet(prevDailyDiet => [...prevDailyDiet, newEntry]);
+        } catch (error) {
+            console.error('Error adding food entry to daily diet:', error);
         }
     };
 

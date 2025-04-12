@@ -10,6 +10,117 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Interface for food items
+export interface FoodItem {
+  id?: number;
+  name: string;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+  calories: number;
+  servingSize?: number;
+  unit: string;
+  created_at?: string;
+}
+
+// Interface for daily diet entries
+export interface DailyDietEntry {
+  id?: number;
+  date: string;
+  food_id: number;
+  created_at?: string;
+}
+
+// Interface for joined daily diet entries with food details
+export interface DailyDietWithFood {
+  id: number;
+  date: string;
+  name: string;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+  calories: number;
+  unit: string;
+  food_id: number;
+}
+
+// Database response types
+interface FoodResponse {
+  id: number;
+  name: string;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+  calories: number;
+  unit: string;
+}
+
+// Foods table operations
+export const foodsTable = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('foods')
+      .select('*');
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getByName(name: string) {
+    const { data, error } = await supabase
+      .from('foods')
+      .select('*')
+      .eq('name', name)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async add(food: Omit<FoodItem, 'id' | 'created_at'>) {
+    const { data, error } = await supabase
+      .from('foods')
+      .insert([food])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id: number, food: Partial<FoodItem>) {
+    const { data, error } = await supabase
+      .from('foods')
+      .update(food)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  async delete(name: string) {
+    const { error } = await supabase
+      .from('foods')
+      .delete()
+      .eq('name', name);
+    
+    if (error) throw error;
+    return true;
+  },
+  
+  async search(query: string) {
+    const { data, error } = await supabase
+      .from('foods')
+      .select('*')
+      .ilike('name', `%${query}%`);
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
 // Goals table operations
 export const goalsTable = {
   async create(goal: Omit<MacroGoal, 'id' | 'created_at'>) {
@@ -81,6 +192,97 @@ export const goalsTable = {
   }
 };
 
+// Daily Diet table operations
+export const dailyDietTable = {
+  async getAll(): Promise<DailyDietWithFood[]> {
+    const { data, error } = await supabase
+      .from('dailydiet')
+      .select(`
+        id,
+        date,
+        foods!dailydiet_food_id_fkey (
+          id,
+          name,
+          protein,
+          carbs,
+          fat,
+          calories,
+          unit
+        )
+      `);
+    
+    if (error) throw error;
+    
+    // Transform the data to a more usable format
+    return (data as unknown as any[]).map(item => ({
+      id: item.id,
+      date: item.date,
+      name: item.foods.name,
+      protein: item.foods.protein,
+      carbs: item.foods.carbs,
+      fat: item.foods.fat,
+      calories: item.foods.calories,
+      unit: item.foods.unit,
+      food_id: item.foods.id
+    }));
+  },
+
+  async getByDate(date: string): Promise<DailyDietWithFood[]> {
+    const { data, error } = await supabase
+      .from('dailydiet')
+      .select(`
+        id,
+        date,
+        foods!dailydiet_food_id_fkey (
+          id,
+          name,
+          protein,
+          carbs,
+          fat,
+          calories,
+          unit
+        )
+      `)
+      .eq('date', date);
+    
+    if (error) throw error;
+    
+    // Transform the data to a more usable format
+    return (data as unknown as any[]).map(item => ({
+      id: item.id,
+      date: item.date,
+      name: item.foods.name,
+      protein: item.foods.protein,
+      carbs: item.foods.carbs,
+      fat: item.foods.fat,
+      calories: item.foods.calories,
+      unit: item.foods.unit,
+      food_id: item.foods.id
+    }));
+  },
+
+  async add(entry: Omit<DailyDietEntry, 'id' | 'created_at'>) {
+    const { data, error } = await supabase
+      .from('dailydiet')
+      .insert([entry])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: number) {
+    const { error } = await supabase
+      .from('dailydiet')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  }
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -89,7 +291,16 @@ export interface Database {
         Insert: Omit<MacroGoal, 'id' | 'created_at'>;
         Update: Partial<Omit<MacroGoal, 'id' | 'created_at'>>;
       };
-      // ... existing code ...
+      foods: {
+        Row: FoodItem;
+        Insert: Omit<FoodItem, 'id' | 'created_at'>;
+        Update: Partial<Omit<FoodItem, 'id' | 'created_at'>>;
+      };
+      dailydiet: {
+        Row: DailyDietEntry;
+        Insert: Omit<DailyDietEntry, 'id' | 'created_at'>;
+        Update: Partial<Omit<DailyDietEntry, 'id' | 'created_at'>>;
+      };
     };
   };
 } 

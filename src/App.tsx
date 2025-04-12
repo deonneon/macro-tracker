@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 
 // Route components
 import Dashboard from './routes/Dashboard';
-import FoodInput from './routes/FoodInput';
+import FoodEntryPage from './routes/FoodEntryPage';
 import DatabasePage from './routes/DatabasePage';
 import QAPage from './routes/QAPage';
 import GoalsPage from './routes/GoalsPage';
@@ -17,7 +17,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="food-entry" element={<FoodInput />} />
+            <Route path="food-entry" element={<FoodEntryPage />} />
             <Route path="database" element={<DatabasePage />} />
             <Route path="goals" element={<GoalsPage />} />
             <Route path="reports" element={<QAPage />} />

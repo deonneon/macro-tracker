@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { ReactNode, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 
-const Layout: React.FC = () => {
+interface LayoutProps {
+  children?: ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -17,7 +21,7 @@ const Layout: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Outlet />
+        {children || <Outlet />}
       </main>
 
       <footer className="bg-gray-50 border-t border-gray-200 mt-auto">
