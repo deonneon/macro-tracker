@@ -3,6 +3,7 @@ import { DietContext } from '../DietContext';
 import { format } from 'date-fns';
 import FoodService from '../services/FoodService';
 import { FoodItem } from '../lib/supabase';
+import MacroChart from './MacroChart';
 
 interface FoodSelectionProps {
   foodName: string;
@@ -11,6 +12,7 @@ interface FoodSelectionProps {
   carbs: number;
   fat: number;
   calories: number;
+  isExtremeValue?: boolean;
 }
 
 const DailyFoodEntryForm: React.FC = () => {
@@ -34,6 +36,7 @@ const DailyFoodEntryForm: React.FC = () => {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [databaseError, setDatabaseError] = useState<string>('');
   const [selectedFoodItem, setSelectedFoodItem] = useState<FoodItem | null>(null);
+  const [showWarning, setShowWarning] = useState<boolean>(false);
   
   // Search foods using the new service
   const searchFoods = async (query: string): Promise<void> => {
@@ -90,6 +93,7 @@ const DailyFoodEntryForm: React.FC = () => {
     if (!value) {
       setSelectedFoodData(null);
       setSelectedFoodItem(null);
+      setShowWarning(false);
     }
   };
   
@@ -98,6 +102,7 @@ const DailyFoodEntryForm: React.FC = () => {
     setSelectedFood(name);
     setMatchingFoods([]);
     setDatabaseError('');
+    setShowWarning(false);
     
     try {
       let foodItem: FoodItem;
@@ -134,13 +139,17 @@ const DailyFoodEntryForm: React.FC = () => {
   const updateFoodData = (foodItem: FoodItem, newServingSize: number): void => {
     const nutrition = FoodService.calculateNutrition(foodItem, newServingSize);
     
+    // Set warning if extreme value detected
+    setShowWarning(nutrition.isExtremeValue);
+    
     setSelectedFoodData({
       foodName: foodItem.name,
       servingSize: newServingSize.toString(),
       protein: nutrition.protein,
       carbs: nutrition.carbs,
       fat: nutrition.fat,
-      calories: nutrition.calories
+      calories: nutrition.calories,
+      isExtremeValue: nutrition.isExtremeValue
     });
   };
   
@@ -191,15 +200,18 @@ const DailyFoodEntryForm: React.FC = () => {
       const foodForDatabase = {
         id: selectedFoodItem.id || 0, // Ensure id is a number, not undefined
         name: selectedFood,
-        protein: selectedFoodItem.protein,
-        carbs: selectedFoodItem.carbs || 0,
-        fat: selectedFoodItem.fat || 0,
-        calories: selectedFoodItem.calories,
-        serving_size: selectedFoodItem.serving_size || 1,
+        protein: selectedFoodData.protein,
+        carbs: selectedFoodData.carbs,
+        fat: selectedFoodData.fat,
+        calories: selectedFoodData.calories,
+        serving_size: parseFloat(selectedFoodData.servingSize),
         unit: selectedFoodItem.unit
       };
       
-      await addFoodEntryToDailyDiet(foodForDatabase, selectedDate);
+      await addFoodEntryToDailyDiet({
+        ...foodForDatabase,
+        id: foodForDatabase.id // Ensure ID is included
+      }, selectedDate);
       
       // Show success message with meal type
       setSuccessMessage(`${selectedFood} added to your ${mealType} for ${selectedDate}!`);
@@ -210,6 +222,7 @@ const DailyFoodEntryForm: React.FC = () => {
       setSelectedFoodData(null);
       setSelectedFoodItem(null);
       setErrorMessage('');
+      setShowWarning(false);
       
       // Clear success message after 3 seconds
       setTimeout(() => {
@@ -250,6 +263,16 @@ const DailyFoodEntryForm: React.FC = () => {
       {databaseError && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
           {databaseError}
+        </div>
+      )}
+      
+      {showWarning && (
+        <div className="mb-4 p-3 bg-yellow-100 text-yellow-800 rounded">
+          <div className="font-bold">Warning: Large serving size</div>
+          <p className="text-sm">
+            The serving size you've entered is much larger than the default. 
+            Please double-check that this is correct.
+          </p>
         </div>
       )}
       
@@ -399,7 +422,9 @@ const DailyFoodEntryForm: React.FC = () => {
         {selectedFoodData && (
           <div className="p-4 bg-gray-50 rounded-md">
             <h3 className="font-medium text-gray-800 mb-2">Nutritional Information</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            
+            {/* Show basic info in a grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
               <div className="p-2 bg-blue-50 rounded text-center">
                 <div className="text-sm text-gray-600">Calories</div>
                 <div className="font-bold">{selectedFoodData.calories}</div>
@@ -416,6 +441,16 @@ const DailyFoodEntryForm: React.FC = () => {
                 <div className="text-sm text-gray-600">Fat</div>
                 <div className="font-bold">{selectedFoodData.fat}g</div>
               </div>
+            </div>
+            
+            {/* Add macro distribution chart */}
+            <div className="mt-4">
+              <MacroChart 
+                protein={selectedFoodData.protein}
+                carbs={selectedFoodData.carbs}
+                fat={selectedFoodData.fat}
+                calories={selectedFoodData.calories}
+              />
             </div>
           </div>
         )}

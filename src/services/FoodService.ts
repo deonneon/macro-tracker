@@ -60,15 +60,72 @@ export const FoodService = {
     carbs: number;
     fat: number;
     calories: number;
+    isExtremeValue: boolean;
   } {
-    const defaultServingSize = food.serving_size || 1;
-    const multiplier = servingSize / defaultServingSize;
+    // Handle edge cases
+    const validServingSize = Math.max(0, servingSize || 0);
+    const defaultServingSize = Math.max(0.1, food.serving_size || 1);
+    
+    // Check if this is an extreme serving size (more than 10x the default)
+    const isExtremeValue = validServingSize > defaultServingSize * 10;
+    
+    // Calculate multiplier for scaling nutrition values
+    const multiplier = validServingSize / defaultServingSize;
+    
+    // Ensure values are always valid numbers and properly rounded
+    return {
+      protein: parseFloat((Math.max(0, food.protein || 0) * multiplier).toFixed(1)),
+      carbs: parseFloat((Math.max(0, food.carbs || 0) * multiplier).toFixed(1)),
+      fat: parseFloat((Math.max(0, food.fat || 0) * multiplier).toFixed(1)),
+      calories: Math.max(0, Math.round((food.calories || 0) * multiplier)),
+      isExtremeValue
+    };
+  },
+  
+  /**
+   * Validate macro ratios to ensure they match calories
+   * @param protein Protein in grams
+   * @param carbs Carbs in grams
+   * @param fat Fat in grams
+   * @param calories Total calories
+   * @returns Whether the macros roughly match the calories
+   */
+  validateMacroRatio(protein: number, carbs: number, fat: number, calories: number): boolean {
+    const calculatedCalories = (protein * 4) + (carbs * 4) + (fat * 9);
+    const tolerance = 10; // Allow small difference to account for rounding
+    
+    return Math.abs(calculatedCalories - calories) <= tolerance;
+  },
+  
+  /**
+   * Get macro percentages for a given set of macronutrients
+   * @param protein Protein in grams
+   * @param carbs Carbs in grams
+   * @param fat Fat in grams
+   * @returns Object with percentage values for each macro
+   */
+  getMacroPercentages(protein: number, carbs: number, fat: number): {
+    proteinPercentage: number;
+    carbsPercentage: number;
+    fatPercentage: number;
+  } {
+    const proteinCalories = protein * 4;
+    const carbsCalories = carbs * 4;
+    const fatCalories = fat * 9;
+    const totalCalories = proteinCalories + carbsCalories + fatCalories;
+    
+    if (totalCalories === 0) {
+      return {
+        proteinPercentage: 0,
+        carbsPercentage: 0,
+        fatPercentage: 0
+      };
+    }
     
     return {
-      protein: parseFloat((food.protein * multiplier).toFixed(1)),
-      carbs: parseFloat(((food.carbs || 0) * multiplier).toFixed(1)),
-      fat: parseFloat(((food.fat || 0) * multiplier).toFixed(1)),
-      calories: Math.round(food.calories * multiplier)
+      proteinPercentage: Math.round((proteinCalories / totalCalories) * 100),
+      carbsPercentage: Math.round((carbsCalories / totalCalories) * 100),
+      fatPercentage: Math.round((fatCalories / totalCalories) * 100)
     };
   },
   
