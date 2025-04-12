@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import GoalSettingForm from '../components/GoalSettingForm';
 import GoalsList from '../components/GoalsList';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -43,14 +43,17 @@ const GoalsPage: React.FC = () => {
 
   const saveGoal = async (goalData: any, existingId?: string) => {
     try {
-      console.log('Saving goal:', goalData);
+      console.log('Saving goal with data:', goalData);
+      console.log('Existing ID (if updating):', existingId);
       
       let result;
       if (existingId) {
         // Update existing goal
+        console.log(`Updating existing goal with ID ${existingId}`);
         result = await goalsTable.update(existingId, goalData);
       } else {
         // Create new goal
+        console.log('Creating new goal');
         result = await goalsTable.create(goalData);
       }
       
@@ -77,6 +80,8 @@ const GoalsPage: React.FC = () => {
     setSuccess(false);
     
     try {
+      console.log('Form data submitted:', formData);
+      
       // Calculate calories based on macros
       const calories = (formData.protein * 4) + (formData.carbs * 4) + (formData.fats * 9);
       
@@ -86,31 +91,53 @@ const GoalsPage: React.FC = () => {
         protein: formData.protein,
         carbs: formData.carbs,
         fat: formData.fats, // Map 'fats' to 'fat'
+        target_date: formData.date, // Store the target date
         user_id: userId
       };
 
+      console.log('Processing goal with target date:', formData.date);
+      
       // Check for existing goals on the same date
       let existingGoalId = currentGoal?.id;
+      let needToCheckForExistingGoals = false;
 
-      // If we're not already editing a goal, check for existing goals on this date
-      if (!existingGoalId) {
+      // If we're editing a goal but the date changed, treat it as a new goal for the new date
+      if (existingGoalId && currentGoal?.target_date !== formData.date) {
+        console.log('Date changed while editing, treating as new goal for new date');
+        needToCheckForExistingGoals = true;
+        existingGoalId = undefined;
+      }
+
+      // If we're not already editing a goal (or we changed the date), check for existing goals on this date
+      if (!existingGoalId || needToCheckForExistingGoals) {
+        console.log('Checking for existing goals on date:', formData.date);
         const existingGoals = await goalsTable.getByDate(formData.date, userId);
+        console.log('Existing goals found:', existingGoals);
         
         if (existingGoals && existingGoals.length > 0) {
           // Use the most recent goal for this date
           const existingGoal = existingGoals[0];
           console.log(`Found existing goal for ${formData.date}:`, existingGoal);
           
-          // Show confirmation modal
-          setModalData({
-            title: 'Goal Already Exists',
-            message: `A goal already exists for ${formData.date}. Would you like to update it instead of creating a new one?`,
-            existingGoalId: existingGoal.id,
-            pendingGoalData: goalData
-          });
-          setShowModal(true);
-          return;
+          // Check if we're not trying to update the exact same goal
+          if (existingGoal.id !== currentGoal?.id) {
+            // Show confirmation modal
+            setModalData({
+              title: 'Goal Already Exists',
+              message: `A goal already exists for ${formData.date}. Would you like to update it instead of creating a new one?`,
+              existingGoalId: existingGoal.id,
+              pendingGoalData: goalData
+            });
+            setShowModal(true);
+            return;
+          } else {
+            console.log('Updating the same goal, no confirmation needed');
+          }
+        } else {
+          console.log('No existing goals found for this date, creating new');
         }
+      } else {
+        console.log('Updating existing goal with ID:', existingGoalId);
       }
       
       // If no existing goal or we're updating the current goal, save directly
@@ -144,6 +171,7 @@ const GoalsPage: React.FC = () => {
   };
 
   const handleEditGoal = (goal: MacroGoal) => {
+    console.log('Editing goal:', goal);
     setCurrentGoal(goal);
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -155,9 +183,19 @@ const GoalsPage: React.FC = () => {
         protein: currentGoal.protein,
         carbs: currentGoal.carbs,
         fats: currentGoal.fat, // Map 'fat' to 'fats' for the form
-        date: format(new Date(), 'yyyy-MM-dd'), // Default to today
+        date: currentGoal.target_date, // Use the target_date from the database
       } 
     : undefined;
+
+  const handleDeleteSuccess = () => {
+    console.log('Goal deleted, refreshing list');
+    setRefreshTrigger(prev => prev + 1);
+    
+    // If the deleted goal was the current goal, clear it
+    if (currentGoal) {
+      setCurrentGoal(null);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -189,6 +227,7 @@ const GoalsPage: React.FC = () => {
           onEditGoal={handleEditGoal}
           currentGoalId={currentGoal?.id}
           refreshTrigger={refreshTrigger}
+          onGoalsChanged={handleDeleteSuccess}
         />
         
         <ConfirmationModal

@@ -2,21 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { goalsTable } from '../lib/supabase';
 import { MacroGoal } from '../types/goals';
+import ConfirmationModal from './ConfirmationModal';
 
 interface GoalsListProps {
   onEditGoal: (goal: MacroGoal) => void;
   currentGoalId?: string;
   refreshTrigger?: number;
+  onGoalsChanged?: () => void;
 }
 
 const GoalsList: React.FC<GoalsListProps> = ({ 
   onEditGoal, 
   currentGoalId,
-  refreshTrigger = 0
+  refreshTrigger = 0,
+  onGoalsChanged
 }) => {
   const [goals, setGoals] = useState<MacroGoal[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [goalToDelete, setGoalToDelete] = useState<MacroGoal | null>(null);
 
   useEffect(() => {
     const fetchGoals = async () => {
@@ -38,6 +43,32 @@ const GoalsList: React.FC<GoalsListProps> = ({
 
     fetchGoals();
   }, [refreshTrigger]);
+
+  const handleDeleteClick = (goal: MacroGoal) => {
+    setGoalToDelete(goal);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!goalToDelete) return;
+    
+    try {
+      await goalsTable.delete(goalToDelete.id);
+      setGoals(goals.filter(goal => goal.id !== goalToDelete.id));
+      if (onGoalsChanged) onGoalsChanged();
+    } catch (err: any) {
+      console.error('Error deleting goal:', err);
+      setError('Failed to delete goal. Please try again.');
+    } finally {
+      setDeleteModalOpen(false);
+      setGoalToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setGoalToDelete(null);
+  };
 
   if (isLoading) {
     return <div className="text-center py-4">Loading goals...</div>;
@@ -66,7 +97,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Created</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target Date</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Protein (g)</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carbs (g)</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fat (g)</th>
@@ -81,7 +112,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
                 className={`${goal.id === currentGoalId ? 'bg-indigo-50' : ''} hover:bg-gray-50`}
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {format(parseISO(goal.created_at), 'MMM d, yyyy h:mm a')}
+                  {format(parseISO(goal.target_date), 'MMM d, yyyy')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {goal.protein}
@@ -98,9 +129,19 @@ const GoalsList: React.FC<GoalsListProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => onEditGoal(goal)}
-                    className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:underline"
+                    className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:underline mr-4"
+                    aria-label={`Edit goal for ${format(parseISO(goal.target_date), 'MMM d, yyyy')}`}
+                    tabIndex={0}
                   >
                     Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(goal)}
+                    className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
+                    aria-label={`Delete goal for ${format(parseISO(goal.target_date), 'MMM d, yyyy')}`}
+                    tabIndex={0}
+                  >
+                    Delete
                   </button>
                 </td>
               </tr>
@@ -108,6 +149,14 @@ const GoalsList: React.FC<GoalsListProps> = ({
           </tbody>
         </table>
       </div>
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        title="Delete Goal"
+        message={goalToDelete ? `Are you sure you want to delete the goal for ${format(parseISO(goalToDelete.target_date), 'MMM d, yyyy')}? This action cannot be undone.` : 'Are you sure you want to delete this goal?'}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   );
 };

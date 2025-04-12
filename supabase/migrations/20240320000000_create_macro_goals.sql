@@ -2,6 +2,7 @@
 CREATE TABLE macro_goals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    target_date DATE NOT NULL,
     calories INTEGER NOT NULL,
     protein DECIMAL(10,2) NOT NULL,
     carbs DECIMAL(10,2) NOT NULL,
@@ -16,6 +17,7 @@ CREATE TABLE macro_goals (
 -- Create index for faster queries
 CREATE INDEX idx_macro_goals_created_at ON macro_goals(created_at);
 CREATE INDEX idx_macro_goals_user_id ON macro_goals(user_id);
+CREATE INDEX idx_macro_goals_target_date ON macro_goals(target_date);
 
 -- Enable Row Level Security
 ALTER TABLE macro_goals ENABLE ROW LEVEL SECURITY;

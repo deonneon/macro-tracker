@@ -29,6 +29,19 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
     date: initialGoal?.date || format(new Date(), 'yyyy-MM-dd'),
   });
 
+  // Add effect to update form when initialGoal changes
+  useEffect(() => {
+    if (initialGoal) {
+      console.log('Initial goal data updated:', initialGoal);
+      setFormData({
+        protein: initialGoal.protein || 0,
+        carbs: initialGoal.carbs || 0,
+        fats: initialGoal.fats || 0,
+        date: initialGoal.date || format(new Date(), 'yyyy-MM-dd'),
+      });
+    }
+  }, [initialGoal]);
+
   const [calories, setCalories] = useState<number>(0);
   const [errors, setErrors] = useState<Partial<Record<keyof FormMacroGoal, string>>>({});
   const [formValid, setFormValid] = useState(true);
@@ -71,6 +84,11 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
       ...prev,
       [name]: name === 'date' ? value : Number(value),
     }));
+    
+    // If date changes, log it
+    if (name === 'date' && initialGoal && initialGoal.date !== value) {
+      console.log(`Date changed from ${initialGoal.date} to ${value}`);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,6 +111,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
       return;
     }
 
+    console.log('Submitting form data:', formData);
     onSubmit(formData);
   };
 

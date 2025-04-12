@@ -39,28 +39,19 @@ export const goalsTable = {
     const { data, error } = await supabase
       .from('macro_goals')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('target_date', { ascending: false });
     
     if (error) throw error;
     return { data, error };
   },
 
   async getByDate(date: string, userId: string) {
-    // Find goals created on the given date
-    // This is approximate since we don't store the form date directly
-    // We're searching by the created_at date component
-    const startOfDay = new Date(date);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(date);
-    endOfDay.setUTCHours(23, 59, 59, 999);
-    
+    // Find goals with the matching target_date
     const { data, error } = await supabase
       .from('macro_goals')
       .select('*')
       .eq('user_id', userId)
-      .gte('created_at', startOfDay.toISOString())
-      .lte('created_at', endOfDay.toISOString())
+      .eq('target_date', date)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
@@ -77,6 +68,16 @@ export const goalsTable = {
     
     if (error) throw error;
     return data;
+  },
+  
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('macro_goals')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
   }
 };
 
