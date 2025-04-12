@@ -7,7 +7,7 @@ interface Food {
   carbs: number;
   fat: number;
   calories: number;
-  servingSize: number;
+  serving_size: number;
   unit: string;
 }
 
@@ -34,7 +34,7 @@ interface DietContextType {
     carbs: number;
     fat: number;
     calories: number; 
-    servingSize: number;
+    serving_size: number;
     unit: string 
   }) => Promise<void>;
   addFoodEntryToDailyDiet: (foodDetails: Food & { name: string }, date: string) => Promise<void>;
@@ -71,7 +71,7 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                         carbs: item.carbs || 0,
                         fat: item.fat || 0,
                         calories: item.calories,
-                        servingSize: item.servingSize || 1,
+                        serving_size: item.serving_size || 1,
                         unit: item.unit
                     };
                 });
@@ -91,7 +91,7 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                     carbs: item.carbs || 0,
                     fat: item.fat || 0,
                     calories: item.calories,
-                    servingSize: 1, // Default serving size
+                    serving_size: 1,
                     unit: item.unit,
                     food_id: item.food_id
                 }));
@@ -149,7 +149,7 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
       carbs: number;
       fat: number;
       calories: number; 
-      servingSize: number;
+      serving_size: number;
       unit: string 
     }): Promise<void> => {
         try {
@@ -160,7 +160,7 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 carbs: foodData.carbs,
                 fat: foodData.fat,
                 calories: foodData.calories,
-                servingSize: foodData.servingSize,
+                serving_size: foodData.serving_size,
                 unit: foodData.unit
             });
 
@@ -173,12 +173,13 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                     carbs: data.carbs || 0,
                     fat: data.fat || 0,
                     calories: data.calories,
-                    servingSize: data.servingSize || 1,
+                    serving_size: data.serving_size || 1,
                     unit: data.unit
                 }
             }));
         } catch (error) {
             console.error('Error adding food to database:', error);
+            throw error; // Re-throw the error to handle it in the component
         }
     };
 

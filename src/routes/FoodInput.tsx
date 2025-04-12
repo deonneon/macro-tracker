@@ -44,8 +44,8 @@ const FoodInput: React.FC = () => {
     const [carbsInput, setCarbsInput] = useState<string>('');
     const [fatInput, setFatInput] = useState<string>('');
     const [calorieInput, setCalorieInput] = useState<string>('');
-    const [unitInput, setUnitInput] = useState<string>('');
-    const [servingSizeInput, setServingSizeInput] = useState<string>('');
+    const [unitInput, setUnitInput] = useState<string>('serving');
+    const [servingSizeInput, setServingSizeInput] = useState<string>('1');
     const [matchingFoods, setMatchingFoods] = useState<string[]>([]);
     const [showForm, setShowForm] = useState<boolean>(false);
     const [showCancel, setShowCancel] = useState<boolean>(false);
@@ -101,8 +101,8 @@ const FoodInput: React.FC = () => {
         setCarbsInput('');
         setFatInput('');
         setCalorieInput('');
-        setUnitInput('');
-        setServingSizeInput('');
+        setUnitInput('serving');
+        setServingSizeInput('1');
         setShowCancel(false);
         setAIDataReturned(false);
         setValidationErrors({});
@@ -152,7 +152,7 @@ const FoodInput: React.FC = () => {
         const carbs = parseFloat(carbsInput) || 0;
         const fat = parseFloat(fatInput) || 0;
         const calories = parseFloat(calorieInput) || 0;
-        const servingSize = parseFloat(servingSizeInput) || 1;
+        const serving_size = parseFloat(servingSizeInput) || 1;
 
         const newFoodData = {
             name: input,
@@ -160,7 +160,7 @@ const FoodInput: React.FC = () => {
             carbs,
             fat,
             calories,
-            servingSize,
+            serving_size,
             unit: unitInput || "serving",
             id: 0 // Temporary ID that will be replaced by the server
         };
@@ -175,25 +175,27 @@ const FoodInput: React.FC = () => {
         try {
             await addFoodToDatabase({
                 name: input,
-                protein: newFoodData.protein,
-                carbs: newFoodData.carbs,
-                fat: newFoodData.fat,
-                calories: newFoodData.calories,
-                servingSize: newFoodData.servingSize,
-                unit: newFoodData.unit
+                protein,
+                carbs,
+                fat,
+                calories,
+                serving_size,
+                unit: unitInput
             });
 
-            setDailyDiet([...dailyDiet, { 
-                date: currentDate, 
-                name: input, 
-                id: 0, // This will be updated by the server response
-                protein: newFoodData.protein,
-                carbs: newFoodData.carbs,
-                fat: newFoodData.fat,
-                calories: newFoodData.calories,
-                servingSize: newFoodData.servingSize,
-                unit: newFoodData.unit 
-            }]);
+            const newDailyEntry = {
+                date: currentDate,
+                name: input,
+                id: 0, // Temporary ID
+                protein,
+                carbs,
+                fat,
+                calories,
+                serving_size,
+                unit: unitInput
+            };
+
+            setDailyDiet([...dailyDiet, newDailyEntry]);
             
             // Reset form
             handleCancel();

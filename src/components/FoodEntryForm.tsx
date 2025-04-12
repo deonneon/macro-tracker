@@ -10,15 +10,6 @@ interface ValidationErrors {
   macroBalance?: string;
 }
 
-function getTodayDate(): string {
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const now = new Date();
-  const year = new Intl.DateTimeFormat('en', { year: 'numeric', timeZone }).format(now);
-  const month = new Intl.DateTimeFormat('en', { month: '2-digit', timeZone }).format(now);
-  const day = new Intl.DateTimeFormat('en', { day: '2-digit', timeZone }).format(now);
-  return `${year}-${month}-${day}`;
-}
-
 const isValidNumberOrBlank = (value: string): boolean => {
   return /^(\d+(\.\d+)?)?$/.test(value);
 };
@@ -81,7 +72,7 @@ const FoodEntryForm: React.FC = () => {
       setFat(food.fat.toString());
       setCalories(food.calories.toString());
       setUnit(food.unit);
-      setServingSize(food.servingSize.toString());
+      setServingSize(food.serving_size.toString());
     }
   };
 

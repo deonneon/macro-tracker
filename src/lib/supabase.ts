@@ -18,7 +18,7 @@ export interface FoodItem {
   carbs?: number;
   fat?: number;
   calories: number;
-  servingSize?: number;
+  serving_size?: number;
   unit: string;
   created_at?: string;
 }
@@ -63,6 +63,7 @@ export const foodsTable = {
       .select('*');
     
     if (error) throw error;
+    
     return data;
   },
 
