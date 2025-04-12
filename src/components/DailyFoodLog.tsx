@@ -6,6 +6,7 @@ import { faChevronLeft, faChevronRight, faEdit, faTrash } from '@fortawesome/fre
 import { dailyDietTable } from '../lib/supabase';
 import EditFoodEntryModal from './EditFoodEntryModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import QuickAddFood from './QuickAddFood';
 
 // Interface for food entries grouped by meal type
 interface MealGroup {
@@ -202,6 +203,9 @@ const DailyFoodLog: React.FC = () => {
           <FontAwesomeIcon icon={faChevronRight} className="text-gray-600" />
         </button>
       </div>
+      
+      {/* Quick Add Section */}
+      <QuickAddFood className="mb-6 bg-white rounded-lg shadow" />
 
       {/* Column Headers */}
       <div className="bg-white rounded-t-lg shadow mb-px">

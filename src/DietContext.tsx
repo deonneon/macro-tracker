@@ -37,7 +37,7 @@ interface DietContextType {
     serving_size: number;
     unit: string 
   }) => Promise<void>;
-  addFoodEntryToDailyDiet: (foodDetails: Food & { name: string }, date: string) => Promise<void>;
+  addFoodEntryToDailyDiet: (foodDetails: Food & { name: string }, date: string, mealType?: string) => Promise<void>;
 }
 
 export const DietContext = createContext<DietContextType | undefined>(undefined);
@@ -183,12 +183,13 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
         }
     };
 
-    const addFoodEntryToDailyDiet = async (foodDetails: Food & { name: string }, date: string): Promise<void> => {
+    const addFoodEntryToDailyDiet = async (foodDetails: Food & { name: string }, date: string, mealType: string = 'Breakfast'): Promise<void> => {
         try {
             // Add to Supabase
             const data = await dailyDietTable.add({
                 date,
-                food_id: foodDetails.id
+                food_id: foodDetails.id,
+                meal_type: mealType
             });
 
             // Add to local state with the response

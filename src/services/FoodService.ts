@@ -1,4 +1,4 @@
-import { foodsTable, FoodItem } from '../lib/supabase';
+import { foodsTable, FoodItem, frequentlyUsedFoodsTable, FrequentlyUsedFood } from '../lib/supabase';
 
 // Cache for storing recently accessed foods to improve performance
 const foodCache: { [key: string]: FoodItem } = {};
@@ -127,6 +127,66 @@ export const FoodService = {
       carbsPercentage: Math.round((carbsCalories / totalCalories) * 100),
       fatPercentage: Math.round((fatCalories / totalCalories) * 100)
     };
+  },
+  
+  /**
+   * Get frequently used foods
+   * @returns A promise that resolves to an array of frequently used food items
+   */
+  async getFrequentlyUsedFoods(): Promise<{ food: FoodItem, frequentData: FrequentlyUsedFood }[]> {
+    try {
+      const frequentFoods = await frequentlyUsedFoodsTable.getAll();
+      
+      // Transform the data into a more usable format
+      const result = frequentFoods.map(item => ({
+        food: item.foods,
+        frequentData: {
+          id: item.id,
+          food_id: item.food_id,
+          food_name: item.food_name,
+          default_serving_size: item.default_serving_size,
+          usage_count: item.usage_count,
+          last_used_date: item.last_used_date,
+          user_id: item.user_id
+        }
+      }));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching frequently used foods:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Tracks usage of a food item, adding it to frequently used foods or incrementing usage
+   * @param foodId The food ID
+   * @param foodName The food name
+   * @param servingSize The serving size used
+   * @returns A promise that resolves when tracking is complete
+   */
+  async trackFoodUsage(foodId: number, foodName: string, servingSize: number = 1): Promise<void> {
+    try {
+      await frequentlyUsedFoodsTable.add(foodId, foodName, servingSize);
+    } catch (error) {
+      console.error('Error tracking food usage:', error);
+      // Don't throw error, just log it - this is a non-critical operation
+    }
+  },
+  
+  /**
+   * Updates the default serving size for a frequently used food
+   * @param foodId The food ID
+   * @param servingSize The new default serving size
+   * @returns A promise that resolves when update is complete
+   */
+  async updateDefaultServingSize(foodId: number, servingSize: number): Promise<void> {
+    try {
+      await frequentlyUsedFoodsTable.updateServingSize(foodId, servingSize);
+    } catch (error) {
+      console.error('Error updating default serving size:', error);
+      throw error;
+    }
   },
   
   /**

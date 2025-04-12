@@ -23,11 +23,23 @@ export interface FoodItem {
   created_at?: string;
 }
 
+// Interface for frequently used foods
+export interface FrequentlyUsedFood {
+  id?: number;
+  food_id: number;
+  food_name: string;
+  default_serving_size: number;
+  usage_count: number;
+  last_used_date: string;
+  user_id?: string;
+}
+
 // Interface for daily diet entries
 export interface DailyDietEntry {
   id?: number;
   date: string;
   food_id: number;
+  meal_type?: string;
   created_at?: string;
 }
 
@@ -42,6 +54,7 @@ export interface DailyDietWithFood {
   calories: number;
   unit: string;
   food_id: number;
+  meal_type?: string;
 }
 
 // Database response types
@@ -119,6 +132,175 @@ export const foodsTable = {
     
     if (error) throw error;
     return data;
+  }
+};
+
+// Frequently used foods table operations
+export const frequentlyUsedFoodsTable = {
+  // Initialize the table if needed
+  async initialize() {
+    try {
+      // Check if the table exists
+      const { data, error } = await supabase
+        .from('frequently_used_foods')
+        .select('id')
+        .limit(1);
+
+      if (error && error.code === 'PGRST116') {
+        // If the table doesn't exist, create it
+        // This requires admin privileges
+        console.log('Attempting to create frequently_used_foods table...');
+        
+        await supabase.rpc('create_frequently_used_foods_table');
+        return true;
+      }
+      
+      // Table exists
+      return true;
+    } catch (error) {
+      console.error('Error initializing frequently_used_foods table:', error);
+      return false;
+    }
+  },
+
+  async getAll() {
+    try {
+      // Use the correct foreign key relationship name (fk_food)
+      const { data, error } = await supabase
+        .from('frequently_used_foods')
+        .select(`
+          *,
+          foods!fk_food (*)
+        `)
+        .order('usage_count', { ascending: false })
+        .limit(15);
+      
+      if (!error) {
+        return data;
+      }
+      
+      // If that fails, try a manual join
+      console.warn('Falling back to manual join due to error:', error);
+      
+      const { data: frequentFoods, error: frequentFoodsError } = await supabase
+        .from('frequently_used_foods')
+        .select('*')
+        .order('usage_count', { ascending: false })
+        .limit(15);
+        
+      if (frequentFoodsError) throw frequentFoodsError;
+      
+      // Manually fetch each food by ID
+      const result = [];
+      for (const freqFood of frequentFoods) {
+        try {
+          const { data: foodData, error: foodError } = await supabase
+            .from('foods')
+            .select('*')
+            .eq('id', freqFood.food_id)
+            .single();
+            
+          if (!foodError) {
+            result.push({
+              ...freqFood,
+              foods: foodData
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching individual food:', err);
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error in getAll method:', error);
+      throw error;
+    }
+  },
+
+  async add(foodId: number, foodName: string, defaultServingSize: number = 1) {
+    const now = new Date().toISOString();
+    
+    // Check if the food already exists in the frequently used foods
+    const { data: existingEntry, error: checkError } = await supabase
+      .from('frequently_used_foods')
+      .select('*')
+      .eq('food_id', foodId)
+      .single();
+      
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError;
+    }
+    
+    if (existingEntry) {
+      // Update the existing entry
+      const { data, error } = await supabase
+        .from('frequently_used_foods')
+        .update({
+          usage_count: existingEntry.usage_count + 1,
+          last_used_date: now
+        })
+        .eq('id', existingEntry.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    } else {
+      // Create a new entry
+      const { data, error } = await supabase
+        .from('frequently_used_foods')
+        .insert([{
+          food_id: foodId,
+          food_name: foodName,
+          default_serving_size: defaultServingSize,
+          usage_count: 1,
+          last_used_date: now
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  },
+  
+  async incrementUsage(foodId: number) {
+    const now = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('frequently_used_foods')
+      .update({
+        usage_count: supabase.rpc('increment_usage_count', { row_id: foodId }),
+        last_used_date: now
+      })
+      .eq('food_id', foodId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+  
+  async updateServingSize(foodId: number, servingSize: number) {
+    const { data, error } = await supabase
+      .from('frequently_used_foods')
+      .update({ default_serving_size: servingSize })
+      .eq('food_id', foodId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
+// Helper to ensure the table exists before using it
+export const ensureFrequentlyUsedFoodsTable = async () => {
+  try {
+    await frequentlyUsedFoodsTable.initialize();
+  } catch (error) {
+    console.error('Failed to initialize frequently_used_foods table:', error);
   }
 };
 
@@ -266,7 +448,7 @@ export const dailyDietTable = {
     const { data, error } = await supabase
       .from('dailydiet')
       .insert([entry])
-      .select()
+      .select('*')
       .single();
     
     if (error) throw error;
@@ -362,6 +544,11 @@ export interface Database {
         Row: DailyDietEntry;
         Insert: Omit<DailyDietEntry, 'id' | 'created_at'>;
         Update: Partial<Omit<DailyDietEntry, 'id' | 'created_at'>>;
+      };
+      frequently_used_foods: {
+        Row: FrequentlyUsedFood;
+        Insert: Omit<FrequentlyUsedFood, 'id'>;
+        Update: Partial<Omit<FrequentlyUsedFood, 'id'>>;
       };
     };
   };
