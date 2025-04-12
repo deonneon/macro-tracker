@@ -121,7 +121,7 @@ const FoodEntryForm: React.FC = () => {
         carbs: parseFloat(carbs) || 0,
         fat: parseFloat(fat) || 0,
         calories: parseFloat(calories) || 0,
-        servingSize: parseFloat(servingSize) || 1,
+        serving_size: parseFloat(servingSize) || 1,
         unit: unit || 'serving'
       };
       
