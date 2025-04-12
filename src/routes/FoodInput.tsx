@@ -1,6 +1,6 @@
 import React, { useState, useContext, useRef } from 'react';
-import { DietContext } from './DietContext';
-import AIQueryComponent from './AIQueryComponent';
+import { DietContext } from '../DietContext';
+import AIQueryComponent from '../AIQueryComponent';
 
 function getTodayDate(): string {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

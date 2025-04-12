@@ -1,0 +1,84 @@
+# Macro Tracker - Personal Nutrition Tracking Application
+
+## Project Overview
+A personal macro-tracking application built with Vite, React, and Supabase for tracking daily macronutrient intake and nutritional goals. The application will focus on simplicity and efficiency, without requiring user authentication since it's for personal use only.
+
+## Core Features
+
+### 1. Dashboard
+- Display daily macro targets vs. actual intake
+- Show progress bars for proteins, carbs, and fats
+- Display total calories
+- Quick summary of today's meals
+- Weekly overview chart
+
+### 2. Food Entry
+- Quick-add food items with macro information
+- Save frequently used foods for quick access
+- Meal categorization (Breakfast, Lunch, Dinner, Snacks)
+- Ability to copy meals from previous days
+- Real-time macro calculations
+
+### 3. Food Database
+- Personal database of frequently used foods
+- Custom food creation with macro information
+- Ability to edit and delete saved foods
+- Search and filter functionality
+
+### 4. Goal Setting
+- Set daily macro targets (proteins, carbs, fats)
+- Automatic calorie calculation based on macros
+- Ability to adjust goals easily
+- Weekly goal tracking
+
+### 5. Reports & Analytics
+- Daily and weekly macro intake trends
+- Visual representations of macro distribution
+- Progress tracking over time
+- Export functionality for data backup
+
+## Technical Requirements
+
+### Frontend
+- Built with Vite + React
+- TailwindCSS for styling
+- Responsive design for mobile and desktop use
+- Client-side caching for better performance
+- Modern date handling with date-fns
+- Chart.js for data visualization
+
+### Backend
+- Supabase for data storage and real-time updates
+- Tables required:
+  - foods (custom foods database)
+  - daily_entries (food entries per day)
+  - goals (macro and calorie targets)
+  - meal_templates (saved meal combinations)
+
+### Data Structure
+- Foods: id, name, protein, carbs, fat, calories, serving_size, created_at
+- Daily Entries: id, date, food_id, meal_type, servings, created_at
+- Goals: id, date, protein_target, carb_target, fat_target, created_at
+- Meal Templates: id, name, foods_json, created_at
+
+## Performance Requirements
+- Initial load time under 2 seconds
+- Smooth animations for transitions
+- Efficient data caching
+- Responsive UI with no lag
+
+## Future Enhancements (Not in Initial Scope)
+- Recipe builder
+- Meal planning calendar
+- Barcode scanner
+- Nutrition insights and recommendations
+- Data export/import functionality
+
+## Development Priorities
+1. Core food logging functionality
+2. Basic dashboard with macro tracking
+3. Food database management
+4. Goal setting and tracking
+5. Reports and analytics
+6. Performance optimizations
+7. Additional features and enhancements 

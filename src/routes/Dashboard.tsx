@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { DietContext } from './DietContext';
+import { DietContext } from '../DietContext';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
