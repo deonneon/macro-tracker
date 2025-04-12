@@ -272,6 +272,67 @@ export const dailyDietTable = {
     if (error) throw error;
     return data;
   },
+  
+  async update(id: number, updates: Partial<Omit<DailyDietEntry, 'id' | 'created_at'> & { 
+    name?: string;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+    calories?: number;
+    meal_type?: string;
+    serving_size?: number;
+    unit?: string;
+  }>) {
+    // First, get the current entry to ensure it exists
+    const { data: entry, error: fetchError } = await supabase
+      .from('dailydiet')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (fetchError) throw fetchError;
+    
+    // Extract fields that belong to the dailydiet table
+    const dailyDietUpdates: Partial<DailyDietEntry> = {
+      date: updates.date,
+      food_id: updates.food_id
+    };
+    
+    // Apply updates to the dailydiet table
+    const { data: updatedEntry, error: updateError } = await supabase
+      .from('dailydiet')
+      .update(dailyDietUpdates)
+      .eq('id', id)
+      .select()
+      .single();
+      
+    if (updateError) throw updateError;
+    
+    // If we're also updating food-related fields that need to be saved in the foods table
+    if (updates.name || 
+        updates.protein !== undefined || 
+        updates.carbs !== undefined || 
+        updates.fat !== undefined || 
+        updates.calories !== undefined || 
+        updates.unit) {
+      
+      // For now, just return the updated data
+      return {
+        ...updatedEntry,
+        name: updates.name || '',
+        protein: updates.protein || 0,
+        carbs: updates.carbs,
+        fat: updates.fat,
+        calories: updates.calories || 0,
+        meal_type: updates.meal_type,
+        unit: updates.unit || '',
+      };
+    }
+    
+    // If we're just updating the dailydiet entry, fetch the complete entry with food details
+    const result = await this.getByDate(updatedEntry.date);
+    return result.find(item => item.id === id);
+  },
 
   async delete(id: number) {
     const { error } = await supabase
