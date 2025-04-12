@@ -1,6 +1,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { DietContext } from '../DietContext';
 import { format } from 'date-fns';
+import FoodService from '../services/FoodService';
+import { FoodItem } from '../lib/supabase';
 
 interface FoodSelectionProps {
   foodName: string;
@@ -29,39 +31,117 @@ const DailyFoodEntryForm: React.FC = () => {
   const [selectedFoodData, setSelectedFoodData] = useState<FoodSelectionProps | null>(null);
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [databaseError, setDatabaseError] = useState<string>('');
+  const [selectedFoodItem, setSelectedFoodItem] = useState<FoodItem | null>(null);
+  
+  // Search foods using the new service
+  const searchFoods = async (query: string): Promise<void> => {
+    if (!query) {
+      setMatchingFoods([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    setDatabaseError('');
+    
+    try {
+      // First try local database (faster)
+      const localMatches = Object.keys(database).filter(food => 
+        food.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      if (localMatches.length > 0) {
+        setMatchingFoods(localMatches);
+        setIsSearching(false);
+        return;
+      }
+      
+      // If no local matches, try the service
+      const apiResults = await FoodService.searchFoods(query);
+      const foodNames = apiResults.map(food => food.name);
+      setMatchingFoods(foodNames);
+    } catch (error) {
+      console.error('Error searching foods:', error);
+      setDatabaseError('Unable to search foods. Please try again.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Debounce search to avoid excessive API calls
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (selectedFood) {
+        searchFoods(selectedFood);
+      } else {
+        setMatchingFoods([]);
+      }
+    }, 300); // 300ms delay
+    
+    return () => clearTimeout(delayDebounce);
+  }, [selectedFood]);
   
   // Handle food selection input change
   const handleFoodSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const value = e.target.value;
     setSelectedFood(value);
     
-    if (value) {
-      const matches = Object.keys(database).filter(food => 
-        food.toLowerCase().includes(value.toLowerCase())
-      );
-      setMatchingFoods(matches);
-    } else {
-      setMatchingFoods([]);
+    if (!value) {
       setSelectedFoodData(null);
+      setSelectedFoodItem(null);
     }
   };
   
   // Handle selection of food from dropdown
-  const selectFood = (name: string): void => {
+  const selectFood = async (name: string): Promise<void> => {
     setSelectedFood(name);
     setMatchingFoods([]);
+    setDatabaseError('');
     
-    if (database[name]) {
-      const food = database[name];
-      setSelectedFoodData({
-        foodName: name,
-        servingSize: '1',
-        protein: food.protein,
-        carbs: food.carbs,
-        fat: food.fat,
-        calories: food.calories
-      });
+    try {
+      let foodItem: FoodItem;
+      
+      // Check if the food is in local database first
+      if (database[name]) {
+        foodItem = {
+          ...database[name],
+          name: name,
+        };
+      } else {
+        // If not in local database, fetch from API
+        setIsSearching(true);
+        foodItem = await FoodService.getFoodByName(name);
+      }
+      
+      // Store the selected food item for later use
+      setSelectedFoodItem(foodItem);
+      
+      // Update the food data with default serving
+      updateFoodData(foodItem, parseFloat(servingSize) || 1);
+      
+    } catch (error) {
+      console.error('Error fetching food details:', error);
+      setDatabaseError('Unable to fetch food details. Please try again.');
+      setSelectedFoodData(null);
+      setSelectedFoodItem(null);
+    } finally {
+      setIsSearching(false);
     }
+  };
+  
+  // Update food data with new serving size
+  const updateFoodData = (foodItem: FoodItem, newServingSize: number): void => {
+    const nutrition = FoodService.calculateNutrition(foodItem, newServingSize);
+    
+    setSelectedFoodData({
+      foodName: foodItem.name,
+      servingSize: newServingSize.toString(),
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      calories: nutrition.calories
+    });
   };
   
   // Handle serving size change
@@ -69,29 +149,22 @@ const DailyFoodEntryForm: React.FC = () => {
     const value = e.target.value;
     if (/^(\d*\.?\d*)$/.test(value)) {
       setServingSize(value);
+      
+      // Update nutritional information if a food is selected
+      if (selectedFoodItem) {
+        const newServingSize = parseFloat(value) || 0;
+        updateFoodData(selectedFoodItem, newServingSize);
+      }
     }
   };
   
-  // Calculate macros based on serving size
+  // Update calculated values when serving size changes
   useEffect(() => {
-    if (selectedFoodData && servingSize) {
-      const servingSizeValue = parseFloat(servingSize) || 0;
-      const food = database[selectedFoodData.foodName];
-      
-      if (food) {
-        const multiplier = servingSizeValue / food.serving_size;
-        
-        setSelectedFoodData({
-          ...selectedFoodData,
-          servingSize: servingSize,
-          protein: parseFloat((food.protein * multiplier).toFixed(1)),
-          carbs: parseFloat((food.carbs * multiplier).toFixed(1)),
-          fat: parseFloat((food.fat * multiplier).toFixed(1)),
-          calories: Math.round(food.calories * multiplier)
-        });
-      }
+    if (selectedFoodItem && servingSize) {
+      const newServingSize = parseFloat(servingSize) || 0;
+      updateFoodData(selectedFoodItem, newServingSize);
     }
-  }, [servingSize, database]);
+  }, [servingSize, selectedFoodItem]);
   
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
@@ -108,25 +181,34 @@ const DailyFoodEntryForm: React.FC = () => {
       return;
     }
     
-    if (!selectedFoodData) {
+    if (!selectedFoodData || !selectedFoodItem) {
       setErrorMessage('Food data not available');
       return;
     }
     
     try {
-      const food = database[selectedFood];
-      await addFoodEntryToDailyDiet({
-        ...food,
+      // Add food entry to diet with the selected date and meal type
+      const foodForDatabase = {
+        id: selectedFoodItem.id || 0, // Ensure id is a number, not undefined
         name: selectedFood,
-      }, selectedDate);
+        protein: selectedFoodItem.protein,
+        carbs: selectedFoodItem.carbs || 0,
+        fat: selectedFoodItem.fat || 0,
+        calories: selectedFoodItem.calories,
+        serving_size: selectedFoodItem.serving_size || 1,
+        unit: selectedFoodItem.unit
+      };
       
-      // Show success message
+      await addFoodEntryToDailyDiet(foodForDatabase, selectedDate);
+      
+      // Show success message with meal type
       setSuccessMessage(`${selectedFood} added to your ${mealType} for ${selectedDate}!`);
       
       // Reset form
       setSelectedFood('');
       setServingSize('1');
       setSelectedFoodData(null);
+      setSelectedFoodItem(null);
       setErrorMessage('');
       
       // Clear success message after 3 seconds
@@ -142,6 +224,13 @@ const DailyFoodEntryForm: React.FC = () => {
   // Meal type options
   const mealTypes = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
   
+  // Helper function to adjust serving size
+  const adjustServingSize = (amount: number): void => {
+    const currentValue = parseFloat(servingSize) || 0;
+    const newValue = Math.max(0.1, currentValue + amount);
+    setServingSize(newValue.toFixed(1));
+  };
+  
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Log Food Entry</h1>
@@ -155,6 +244,12 @@ const DailyFoodEntryForm: React.FC = () => {
       {errorMessage && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
           {errorMessage}
+        </div>
+      )}
+      
+      {databaseError && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+          {databaseError}
         </div>
       )}
       
@@ -200,15 +295,33 @@ const DailyFoodEntryForm: React.FC = () => {
           <label htmlFor="foodSelection" className="block text-sm font-medium text-gray-700 mb-1">
             Select Food
           </label>
-          <input
-            id="foodSelection"
-            type="text"
-            value={selectedFood}
-            onChange={handleFoodSearchChange}
-            placeholder="Search foods..."
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            aria-label="Food selection"
-          />
+          <div className="relative">
+            <input
+              id="foodSelection"
+              type="text"
+              value={selectedFood}
+              onChange={handleFoodSearchChange}
+              placeholder="Search foods..."
+              className={`w-full p-2 pl-4 border ${
+                selectedFoodData 
+                  ? 'border-green-500 bg-green-50' 
+                  : 'border-gray-300'
+              } rounded-md focus:ring-blue-500 focus:border-blue-500`}
+              aria-label="Food selection"
+            />
+            {isSearching && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+            {selectedFoodData && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-600">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+          </div>
           
           {/* Autocomplete dropdown */}
           {matchingFoods.length > 0 && (
@@ -232,6 +345,13 @@ const DailyFoodEntryForm: React.FC = () => {
               ))}
             </div>
           )}
+          
+          {selectedFood && matchingFoods.length === 0 && !isSearching && !selectedFoodData && !databaseError && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-2 text-center text-gray-600">
+              No matching foods found. <br />
+              <span className="text-sm">Try adding this food to your database first.</span>
+            </div>
+          )}
         </div>
         
         {/* Serving Size */}
@@ -242,14 +362,10 @@ const DailyFoodEntryForm: React.FC = () => {
           <div className="flex items-center">
             <button
               type="button"
-              onClick={() => {
-                const currentValue = parseFloat(servingSize) || 0;
-                if (currentValue > 0.1) {
-                  setServingSize((currentValue - 0.1).toFixed(1));
-                }
-              }}
+              onClick={() => adjustServingSize(-0.1)}
               className="p-2 bg-gray-200 rounded-l-md"
               aria-label="Decrease serving"
+              disabled={!selectedFoodData}
             >
               -
             </button>
@@ -260,19 +376,23 @@ const DailyFoodEntryForm: React.FC = () => {
               onChange={handleServingSizeChange}
               className="flex-1 p-2 text-center border-t border-b border-gray-300"
               aria-label="Serving size"
+              disabled={!selectedFoodData}
             />
             <button
               type="button"
-              onClick={() => {
-                const currentValue = parseFloat(servingSize) || 0;
-                setServingSize((currentValue + 0.1).toFixed(1));
-              }}
+              onClick={() => adjustServingSize(0.1)}
               className="p-2 bg-gray-200 rounded-r-md"
               aria-label="Increase serving"
+              disabled={!selectedFoodData}
             >
               +
             </button>
           </div>
+          {selectedFoodItem && (
+            <p className="mt-1 text-xs text-gray-500">
+              Default serving: {selectedFoodItem.serving_size} {selectedFoodItem.unit}
+            </p>
+          )}
         </div>
         
         {/* Nutritional Information Display */}
@@ -304,6 +424,7 @@ const DailyFoodEntryForm: React.FC = () => {
         <button
           type="submit"
           className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          disabled={!selectedFoodData || isSearching}
         >
           Add to Daily Log
         </button>
