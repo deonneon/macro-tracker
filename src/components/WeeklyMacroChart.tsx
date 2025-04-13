@@ -244,7 +244,15 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
             if (macroGoal) {
               // Calculate percentage of goal
               const macroType = label.toLowerCase();
-              const goalValue = macroGoal[macroType as keyof MacroGoal] as number;
+              let goalValue = 0;
+              
+              if (macroType === 'protein') {
+                goalValue = macroGoal.protein_goal;
+              } else if (macroType === 'carbs') {
+                goalValue = macroGoal.carbs_goal;
+              } else if (macroType === 'fat') {
+                goalValue = macroGoal.fat_goal;
+              }
               
               if (goalValue) {
                 const percentage = Math.round((value / goalValue) * 100);
@@ -294,13 +302,13 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showProtein) {
       annotations.proteinGoal = {
         type: 'line',
-        yMin: macroGoal.protein,
-        yMax: macroGoal.protein,
+        yMin: macroGoal.protein_goal,
+        yMax: macroGoal.protein_goal,
         borderColor: 'rgba(231, 76, 60, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
-          content: `Protein Goal: ${macroGoal.protein}g`,
+          content: `Protein Goal: ${macroGoal.protein_goal}g`,
           enabled: true,
           position: 'end',
           backgroundColor: 'rgba(231, 76, 60, 0.7)',
@@ -315,13 +323,13 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showCarbs) {
       annotations.carbsGoal = {
         type: 'line',
-        yMin: macroGoal.carbs,
-        yMax: macroGoal.carbs,
+        yMin: macroGoal.carbs_goal,
+        yMax: macroGoal.carbs_goal,
         borderColor: 'rgba(46, 204, 113, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
-          content: `Carbs Goal: ${macroGoal.carbs}g`,
+          content: `Carbs Goal: ${macroGoal.carbs_goal}g`,
           enabled: true,
           position: 'end',
           backgroundColor: 'rgba(46, 204, 113, 0.7)',
@@ -336,13 +344,13 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showFat) {
       annotations.fatGoal = {
         type: 'line',
-        yMin: macroGoal.fat,
-        yMax: macroGoal.fat,
+        yMin: macroGoal.fat_goal,
+        yMax: macroGoal.fat_goal,
         borderColor: 'rgba(241, 196, 15, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
-          content: `Fat Goal: ${macroGoal.fat}g`,
+          content: `Fat Goal: ${macroGoal.fat_goal}g`,
           enabled: true,
           position: 'end',
           backgroundColor: 'rgba(241, 196, 15, 0.7)',
@@ -401,46 +409,51 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
         </div>
         
         {/* Macro Toggles */}
-        <div className="flex items-center space-x-3">
-          <span className="text-sm font-medium text-gray-600">Show:</span>
-          <div className="flex items-center space-x-3">
-            <label className="flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={showProtein} 
-                onChange={() => setShowProtein(!showProtein)}
-                className="sr-only"
-              />
-              <span className={`inline-block w-3 h-3 mr-1 rounded-full bg-red-500 ${showProtein ? 'opacity-100' : 'opacity-30'}`}></span>
-              <span className={`text-sm ${showProtein ? 'font-medium' : 'text-gray-500'}`}>Protein</span>
-            </label>
-            
-            <label className="flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={showCarbs} 
-                onChange={() => setShowCarbs(!showCarbs)}
-                className="sr-only"
-              />
-              <span className={`inline-block w-3 h-3 mr-1 rounded-full bg-green-500 ${showCarbs ? 'opacity-100' : 'opacity-30'}`}></span>
-              <span className={`text-sm ${showCarbs ? 'font-medium' : 'text-gray-500'}`}>Carbs</span>
-            </label>
-            
-            <label className="flex items-center cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={showFat} 
-                onChange={() => setShowFat(!showFat)}
-                className="sr-only"
-              />
-              <span className={`inline-block w-3 h-3 mr-1 rounded-full bg-yellow-500 ${showFat ? 'opacity-100' : 'opacity-30'}`}></span>
-              <span className={`text-sm ${showFat ? 'font-medium' : 'text-gray-500'}`}>Fat</span>
-            </label>
-          </div>
+        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
+          <button
+            onClick={() => setShowProtein(!showProtein)}
+            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs sm:text-sm border ${
+              showProtein 
+                ? 'bg-red-100 border-red-300 text-red-800' 
+                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+            }`}
+            aria-label={`${showProtein ? 'Hide' : 'Show'} protein data`}
+            aria-pressed={showProtein}
+          >
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-600 ${showProtein ? 'opacity-100' : 'opacity-30'}`}></div>
+            <span>Protein</span>
+          </button>
+          
+          <button
+            onClick={() => setShowCarbs(!showCarbs)}
+            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs sm:text-sm border ${
+              showCarbs 
+                ? 'bg-green-100 border-green-300 text-green-800' 
+                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+            }`}
+            aria-label={`${showCarbs ? 'Hide' : 'Show'} carbs data`}
+            aria-pressed={showCarbs}
+          >
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-600 ${showCarbs ? 'opacity-100' : 'opacity-30'}`}></div>
+            <span>Carbs</span>
+          </button>
+          
+          <button
+            onClick={() => setShowFat(!showFat)}
+            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs sm:text-sm border ${
+              showFat 
+                ? 'bg-yellow-100 border-yellow-300 text-yellow-800' 
+                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+            }`}
+            aria-label={`${showFat ? 'Hide' : 'Show'} fat data`}
+            aria-pressed={showFat}
+          >
+            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-600 ${showFat ? 'opacity-100' : 'opacity-30'}`}></div>
+            <span>Fat</span>
+          </button>
         </div>
       </div>
       
-      {/* Chart */}
       <div className="relative" style={{ height: `${height}px` }}>
         {(!showProtein && !showCarbs && !showFat) ? (
           <div className="absolute inset-0 flex items-center justify-center text-gray-500">
