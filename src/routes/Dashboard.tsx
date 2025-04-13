@@ -32,7 +32,6 @@ const Dashboard: React.FC = () => {
         const fetchLatestGoal = async () => {
             try {
                 const latestGoal = await goalsTable.getLatest();
-                console.log('Fetched latest goal:', latestGoal);
                 setCurrentGoal(latestGoal);
             } catch (error) {
                 console.error('Error fetching latest goal:', error);
@@ -59,45 +58,27 @@ const Dashboard: React.FC = () => {
             };
         }, { protein: 0, carbs: 0, fat: 0, calories: 0 });
         
-        console.log('Calculated today\'s macros:', totals);
         setTodaysMacros(totals);
     }, [dailyDiet, formattedToday]);
 
-    // Debug info
-    console.log('Rendering Dashboard with state:', { 
-        isLoading, 
-        hasCurrentGoal: !!currentGoal, 
-        todaysMacros 
-    });
 
     return (
         <div className="flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 w-full max-w-7xl mx-auto">
-            {/* Debug Info */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className="p-2 bg-gray-100 text-xs">
-                    <p>isLoading: {isLoading ? 'true' : 'false'}</p>
-                    <p>currentGoal: {currentGoal ? 'exists' : 'null'}</p>
-                    <p>todaysMacros: P{Math.round(todaysMacros.protein)}g C{Math.round(todaysMacros.carbs)}g F{Math.round(todaysMacros.fat)}g Cal{Math.round(todaysMacros.calories)}</p>
-                </div>
-            )}
 
-            {/* Macro Progress Component - Conditionally Rendered */}
-            {!isLoading && currentGoal && (
-                <MacroProgressDisplay 
-                    currentProtein={todaysMacros.protein}
-                    currentCarbs={todaysMacros.carbs}
-                    currentFat={todaysMacros.fat}
-                    currentCalories={todaysMacros.calories}
-                    targetProtein={currentGoal.protein_goal}
-                    targetCarbs={currentGoal.carbs_goal}
-                    targetFat={currentGoal.fat_goal}
-                    targetCalories={currentGoal.calories_goal}
-                />
-            )}
-            
-            {/* Fallback Macro Progress - Always Rendered For Testing */}
-            {isLoading || !currentGoal ? (
-                <div className="p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+            {/* Macro Progress Component - Single Conditional */}
+            <div className="p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+                {!isLoading && currentGoal ? (
+                    <MacroProgressDisplay 
+                        currentProtein={todaysMacros.protein}
+                        currentCarbs={todaysMacros.carbs}
+                        currentFat={todaysMacros.fat}
+                        currentCalories={todaysMacros.calories}
+                        targetProtein={Number(currentGoal.protein)}
+                        targetCarbs={Number(currentGoal.carbs)}
+                        targetFat={Number(currentGoal.fat)}
+                        targetCalories={Number(currentGoal.calories)}
+                    />
+                ) : (
                     <MacroProgressDisplay 
                         currentProtein={50}
                         currentCarbs={150}
@@ -108,8 +89,8 @@ const Dashboard: React.FC = () => {
                         targetFat={60}
                         targetCalories={2000}
                     />
-                </div>
-            ) : null}
+                )}
+            </div>
             
             {/* Weekly Overview Chart */}
             <div className="p-3 sm:p-4 bg-white rounded-lg shadow-sm">

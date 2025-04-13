@@ -1,10 +1,10 @@
 export interface MacroGoal {
   id?: string;
   user_id?: string;
-  protein_goal: number;
-  carbs_goal: number;
-  fat_goal: number;
-  calories_goal: number;
+  protein: number | string;
+  carbs: number | string;
+  fat: number | string;
+  calories: number;
   target_date?: string;
   created_at?: string;
   description?: string;

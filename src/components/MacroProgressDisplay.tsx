@@ -21,19 +21,6 @@ const MacroProgressDisplay: React.FC<MacroProgressDisplayProps> = ({
   targetFat,
   targetCalories
 }) => {
-  // Debug log when props change
-  useEffect(() => {
-    console.log('MacroProgressDisplay rendered with props:', {
-      currentProtein,
-      currentCarbs,
-      currentFat,
-      currentCalories,
-      targetProtein,
-      targetCarbs,
-      targetFat,
-      targetCalories
-    });
-  }, [currentProtein, currentCarbs, currentFat, currentCalories, targetProtein, targetCarbs, targetFat, targetCalories]);
 
   // Calculate percentages
   const proteinPercentage = Math.min(Math.round((currentProtein / targetProtein) * 100) || 0, 200);

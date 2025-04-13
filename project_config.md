@@ -1,8 +1,3 @@
----
-description: 
-globs: 
-alwaysApply: true
----
 This is a Vite app with tailwindcss. 
 Cursor is on the windows platform so use powershell commands for navigation. 
 Do not use bash commands but powershell commands.
