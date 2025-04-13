@@ -6,6 +6,7 @@ import DateRangeSelector from '../components/reports/DateRangeSelector';
 import MacroDistributionChart from '../components/reports/MacroDistributionChart';
 import NutritionTrendChart from '../components/reports/NutritionTrendChart';
 import StatisticalAnalysis from '../components/reports/StatisticalAnalysis';
+import ExportConfigModal from '../components/ExportConfigModal';
 
 interface DateRange {
   startDate: Date;
@@ -25,6 +26,7 @@ const ReportsPage: React.FC = () => {
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [macroGoal, setMacroGoal] = useState<MacroGoal | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   
   // Get diet context
   const dietContext = useContext(DietContext);
@@ -127,10 +129,43 @@ const ReportsPage: React.FC = () => {
     
     fetchMacroGoal();
   }, []);
+
+  // Handle export button click
+  const handleOpenExportModal = () => {
+    setIsExportModalOpen(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setIsExportModalOpen(false);
+  };
   
   return (
     <div className="mx-auto px-4 py-6 max-w-7xl">
-      <h1 className="text-2xl font-bold mb-6">Nutrition Reports & Analytics</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Nutrition Reports & Analytics</h1>
+        <button
+          className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          onClick={handleOpenExportModal}
+          aria-label="Export nutrition data"
+          tabIndex={0}
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-5 w-5 mr-2" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" 
+            />
+          </svg>
+          Export Data
+        </button>
+      </div>
       
       {/* Date Range Selection */}
       <div className="mb-8 bg-white rounded-lg shadow p-4">
@@ -181,6 +216,12 @@ const ReportsPage: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Export Modal */}
+      <ExportConfigModal 
+        isOpen={isExportModalOpen}
+        onClose={handleCloseExportModal}
+      />
     </div>
   );
 };
