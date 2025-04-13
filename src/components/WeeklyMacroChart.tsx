@@ -51,6 +51,14 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     fatPerDay: number[];
   }>({ proteinPerDay: [], carbsPerDay: [], fatPerDay: [] });
   const [isLoading, setIsLoading] = useState(true);
+  // State to cache fetched data for week/month
+  const [cachedData, setCachedData] = useState<{
+    [key in TimePeriod]?: {
+      proteinPerDay: number[];
+      carbsPerDay: number[];
+      fatPerDay: number[];
+    }
+  }>({});
   
   if (!dietContext) {
     throw new Error('WeeklyMacroChart must be used within a DietProvider');
@@ -196,13 +204,24 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     
     const fetchPeriodData = async () => {
       setIsLoading(true);
+
+      // Check cache first
+      if (cachedData[timePeriod]) {
+        setPeriodData(cachedData[timePeriod]!); // Use cached data
+        setIsLoading(false);
+        return; // Don't fetch if data is cached
+      }
       
+      // If not cached, fetch data
       try {
-        // For week view, we can use a larger batch size since there are fewer dates
         const batchSize = timePeriod === 'week' ? 3 : 2; 
-        // Use the memoized dates array
-        const data = await fetchDataInBatches(dates, batchSize); 
-        setPeriodData(data);
+        const fetchedData = await fetchDataInBatches(dates, batchSize);
+        setPeriodData(fetchedData);
+        // Update cache with the newly fetched data
+        setCachedData(prevCache => ({ 
+          ...prevCache, 
+          [timePeriod]: fetchedData 
+        }));
       } catch (error) {
         console.error('Error fetching period data:', error);
       } finally {
@@ -211,7 +230,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     };
     
     fetchPeriodData();
-  }, [dates, timePeriod]); // useEffect depends on the memoized dates and timePeriod
+  }, [dates, timePeriod, cachedData]); // Add cachedData to dependencies to react to cache updates if needed
   
   // Calculate visible datasets
   const getVisibleDatasets = () => {
