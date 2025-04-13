@@ -1,10 +1,10 @@
-import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { foodsTable, dailyDietTable, FoodItem, mealTemplatesTable, MealTemplate, MealTemplateFood } from './lib/supabase';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { FoodItem, mealTemplatesTable, MealTemplate, MealTemplateFood } from './lib/supabase';
 
 // Import React Query hooks
 import { useAllFoods, useAddFood, useDeleteFood } from './hooks/useFoodDatabase';
 import { useDailyEntriesByDate, useAddDailyEntry, useDeleteDailyEntry, usePrefetchAdjacentDays } from './hooks/useDailyEntries'; 
-import { useAllMealTemplates, useMealTemplateById, useCreateMealTemplate, useUpdateMealTemplate, useDeleteMealTemplate } from './hooks/useMealTemplates';
+import { useAllMealTemplates, useCreateMealTemplate, useUpdateMealTemplate, useDeleteMealTemplate } from './hooks/useMealTemplates';
 import { format } from 'date-fns';
 
 interface Food {
@@ -55,13 +55,6 @@ interface DietContextType {
 
 export const DietContext = createContext<DietContextType | undefined>(undefined);
 
-// Log configured API URL for debugging
-const API_URL = import.meta.env.DEV 
-    ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
-    : (import.meta.env.VITE_NETLIFY_URL || 'https://main--shimmering-figolla-53e06a.netlify.app/api');
-
-// For debugging
-console.log('API_URL:', API_URL);
 
 interface DietProviderProps {
   children: ReactNode;
@@ -77,9 +70,9 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
     const currentDate = format(new Date(), 'yyyy-MM-dd');
 
     // Use React Query hooks for data fetching
-    const { data: foods, isLoading: isLoadingFoods } = useAllFoods();
-    const { data: dailyEntries, isLoading: isLoadingDailyDiet } = useDailyEntriesByDate(currentDate);
-    const { data: templates, isLoading: isLoadingMealTemplates } = useAllMealTemplates();
+    const { data: foods  } = useAllFoods();
+    const { data: dailyEntries } = useDailyEntriesByDate(currentDate);
+    const { data: templates } = useAllMealTemplates();
     
     // Get prefetch function from hook
     const prefetchDays = usePrefetchAdjacentDays();

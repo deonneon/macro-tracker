@@ -4,7 +4,7 @@ import { MealTemplate } from '../lib/supabase';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPlus, faSearch, faFilter, faEdit, faTrash, 
-  faInfoCircle, faSave, faTimes, faCheckCircle 
+  faInfoCircle, faSave, faTimes
 } from '@fortawesome/free-solid-svg-icons';
 
 const MealTemplatesPage: React.FC = () => {
@@ -25,6 +25,7 @@ const MealTemplatesPage: React.FC = () => {
   const [selectedFoods, setSelectedFoods] = useState<Array<{ food_id: number; name: string; serving_size: number; protein: number; carbs?: number; fat?: number; calories: number; unit: string }>>([]);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editTemplateId, setEditTemplateId] = useState<number | null>(null);
+  const [foodSearchTerm, setFoodSearchTerm] = useState('');
 
   if (!dietContext) {
     return <div className="p-8 text-center">Loading context...</div>;
@@ -150,6 +151,7 @@ const MealTemplatesPage: React.FC = () => {
     setSelectedFoods([]);
     setIsEditMode(false);
     setEditTemplateId(null);
+    setFoodSearchTerm('');
   };
 
   // Handle template creation/update
@@ -465,10 +467,8 @@ const MealTemplatesPage: React.FC = () => {
                     type="text"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Search foods..."
-                    onChange={(e) => {
-                      // This would ideally filter from all available foods
-                      // For now we'll just use it as a hint
-                    }}
+                    value={foodSearchTerm}
+                    onChange={(e) => setFoodSearchTerm(e.target.value)}
                   />
                 </div>
                 
@@ -480,27 +480,32 @@ const MealTemplatesPage: React.FC = () => {
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-200">
-                      {dailyDiet.map(food => (
-                        <div 
-                          key={food.id}
-                          className={`p-3 flex items-center hover:bg-gray-50 ${
-                            selectedFoods.some(f => f.food_id === food.id) ? 'bg-blue-50' : ''
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
-                            checked={selectedFoods.some(f => f.food_id === food.id)}
-                            onChange={() => handleAddFood(food)}
-                          />
-                          <div>
-                            <div className="font-medium">{food.name}</div>
-                            <div className="text-xs text-gray-500">
-                              {food.calories} cal | P: {food.protein}g | C: {food.carbs || 0}g | F: {food.fat || 0}g
+                      {dailyDiet
+                        .filter(food => 
+                          foodSearchTerm === '' || 
+                          food.name.toLowerCase().includes(foodSearchTerm.toLowerCase())
+                        )
+                        .map(food => (
+                          <div 
+                            key={food.id}
+                            className={`p-3 flex items-center hover:bg-gray-50 ${
+                              selectedFoods.some(f => f.food_id === food.id) ? 'bg-blue-50' : ''
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                              checked={selectedFoods.some(f => f.food_id === food.id)}
+                              onChange={() => handleAddFood(food)}
+                            />
+                            <div>
+                              <div className="font-medium">{food.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {food.calories} cal | P: {food.protein}g | C: {food.carbs || 0}g | F: {food.fat || 0}g
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   )}
                 </div>

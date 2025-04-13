@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import GoalSettingForm from '../components/GoalSettingForm';
 import GoalsList from '../components/GoalsList';
 import ConfirmationModal from '../components/ConfirmationModal';
@@ -180,10 +180,10 @@ const GoalsPage: React.FC = () => {
   // Format the current goal for the form if it exists
   const formattedCurrentGoal = currentGoal 
     ? {
-        protein: currentGoal.protein,
-        carbs: currentGoal.carbs,
-        fats: currentGoal.fat, // Map 'fat' to 'fats' for the form
-        date: currentGoal.target_date, // Use the target_date from the database
+        protein: Number(currentGoal.protein),
+        carbs: Number(currentGoal.carbs),
+        fats: Number(currentGoal.fat), // Map 'fat' to 'fats' for the form
+        date: currentGoal.target_date || format(new Date(), 'yyyy-MM-dd'), // Provide default date if undefined
       } 
     : undefined;
 

@@ -1,10 +1,8 @@
 import React, { createContext, useContext, ReactNode, useCallback } from 'react';
 import { format } from 'date-fns';
 import { FoodItem, MealTemplate, MealTemplateFood } from '../lib/supabase';
-import { foodsTable } from '../lib/supabase';
 import { useAllFoods, useAddFood, useDeleteFood } from './useFoodDatabase';
-import { useDailyEntriesByDate, useAddDailyEntry, useDeleteDailyEntry, prefetchAdjacentDays } from './useDailyEntries';
-import { useAllGoals, useCreateGoal, useUpdateGoal, useDeleteGoal } from './useUserGoals';
+import { useDailyEntriesByDate, useAddDailyEntry, useDeleteDailyEntry, usePrefetchAdjacentDays } from './useDailyEntries';
 import { useAllMealTemplates, useMealTemplateById, useCreateMealTemplate, useUpdateMealTemplate, useDeleteMealTemplate } from './useMealTemplates';
 
 interface Food {
@@ -189,7 +187,8 @@ export const CachingDietProvider: React.FC<CachingDietProviderProps> = ({ childr
   }, [dailyDiet, deleteDailyEntry]);
 
   const prefetchDays = useCallback((date: string) => {
-    prefetchAdjacentDays(date);
+    const prefetchAdjacentDaysFn = usePrefetchAdjacentDays();
+    prefetchAdjacentDaysFn(date);
   }, []);
   
   // Meal template functions

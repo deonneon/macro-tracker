@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import { DietContext } from '../DietContext';
 import { MacroGoal } from '../types/goals';
 import DateRangeSelector from '../components/reports/DateRangeSelector';
