@@ -56,7 +56,6 @@ export const ExportService = {
         .select(`
           id,
           date,
-          meal_type,
           foods!dailydiet_food_id_fkey (
             id,
             name,
@@ -85,7 +84,6 @@ export const ExportService = {
       return (data as unknown as any[]).map(item => ({
         id: item.id,
         date: item.date,
-        meal_type: item.meal_type,
         name: item.foods.name,
         protein: item.foods.protein,
         carbs: item.foods.carbs,
