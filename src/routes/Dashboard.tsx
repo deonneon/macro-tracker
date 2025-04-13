@@ -68,10 +68,10 @@ const Dashboard: React.FC = () => {
                     currentCarbs={todaysMacros.carbs}
                     currentFat={todaysMacros.fat}
                     currentCalories={todaysMacros.calories}
-                    targetProtein={currentGoal.protein}
-                    targetCarbs={currentGoal.carbs}
-                    targetFat={currentGoal.fat}
-                    targetCalories={currentGoal.calories}
+                    targetProtein={currentGoal.protein_goal}
+                    targetCarbs={currentGoal.carbs_goal}
+                    targetFat={currentGoal.fat_goal}
+                    targetCalories={currentGoal.calories_goal}
                 />
             )}
             
