@@ -10,7 +10,8 @@ import {
   Title, 
   Tooltip, 
   Legend,
-  ChartOptions
+  ChartOptions,
+  Filler
 } from 'chart.js';
 import { MacroGoal } from '../../types/goals';
 
@@ -22,7 +23,8 @@ ChartJS.register(
   LineElement, 
   Title, 
   Tooltip, 
-  Legend
+  Legend,
+  Filler
 );
 
 interface DateRange {
@@ -145,42 +147,49 @@ const NutritionTrendChart: React.FC<NutritionTrendChartProps> = ({
   
   // Prepare chart options
   const chartOptions: ChartOptions<'line'> = useMemo(() => {
+    // Create the base scales object
+    const scales: any = {
+      x: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        },
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45
+        }
+      },
+      y: {
+        position: 'left',
+        title: {
+          display: true,
+          text: 'Grams (g)'
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        },
+        beginAtZero: true
+      }
+    };
+    
+    // Only add y1 axis if calories are shown
+    if (showCalories) {
+      scales.y1 = {
+        position: 'right',
+        title: {
+          display: true,
+          text: 'Calories (kcal)'
+        },
+        grid: {
+          drawOnChartArea: false
+        },
+        beginAtZero: true
+      };
+    }
+    
     return {
       responsive: true,
       maintainAspectRatio: false,
-      scales: {
-        x: {
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
-          ticks: {
-            maxRotation: 45,
-            minRotation: 45
-          }
-        },
-        y: {
-          position: 'left',
-          title: {
-            display: true,
-            text: 'Grams (g)'
-          },
-          grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
-          },
-          beginAtZero: true
-        },
-        y1: showCalories ? {
-          position: 'right',
-          title: {
-            display: true,
-            text: 'Calories (kcal)'
-          },
-          grid: {
-            drawOnChartArea: false
-          },
-          beginAtZero: true
-        } : undefined
-      },
+      scales,
       plugins: {
         tooltip: {
           mode: 'index',
