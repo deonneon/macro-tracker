@@ -7,7 +7,7 @@ import Layout from './components/Layout';
 import Dashboard from './routes/Dashboard';
 import FoodEntryPage from './routes/FoodEntryPage';
 import DatabasePage from './routes/DatabasePage';
-import QAPage from './routes/QAPage';
+import ReportsPage from './routes/ReportsPage';
 import GoalsPage from './routes/GoalsPage';
 import MealTemplatesPage from './routes/MealTemplatesPage';
 
@@ -21,7 +21,7 @@ const App: React.FC = () => {
             <Route path="food-entry" element={<FoodEntryPage />} />
             <Route path="database" element={<DatabasePage />} />
             <Route path="goals" element={<GoalsPage />} />
-            <Route path="reports" element={<QAPage />} />
+            <Route path="reports" element={<ReportsPage />} />
             <Route path="meal-templates" element={<MealTemplatesPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
