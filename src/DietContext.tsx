@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { foodsTable, dailyDietTable, FoodItem, DailyDietWithFood } from './lib/supabase';
+import { foodsTable, dailyDietTable, FoodItem, mealTemplatesTable, MealTemplate, MealTemplateFood } from './lib/supabase';
 
 interface Food {
   id: number;
@@ -26,6 +26,8 @@ interface DietContextType {
   setDatabase: React.Dispatch<React.SetStateAction<FoodDatabase>>;
   dailyDiet: DailyDietItem[];
   setDailyDiet: React.Dispatch<React.SetStateAction<DailyDietItem[]>>;
+  mealTemplates: MealTemplate[];
+  setMealTemplates: React.Dispatch<React.SetStateAction<MealTemplate[]>>;
   removeFoodEntry: (index: number) => Promise<void>;
   removeFoodFromDatabase: (foodName: string) => Promise<void>;
   addFoodToDatabase: (foodData: { 
@@ -38,6 +40,11 @@ interface DietContextType {
     unit: string 
   }) => Promise<void>;
   addFoodEntryToDailyDiet: (foodDetails: Food & { name: string }, date: string, mealType?: string) => Promise<void>;
+  createMealTemplate: (name: string, description: string, selectedFoods: Array<Food & { name: string }>) => Promise<void>;
+  getMealTemplate: (id: number) => Promise<MealTemplate>;
+  updateMealTemplate: (id: number, updates: Partial<MealTemplate>) => Promise<void>;
+  deleteMealTemplate: (id: number) => Promise<void>;
+  applyMealTemplate: (templateId: number, date: string, mealType?: string) => Promise<void>;
 }
 
 export const DietContext = createContext<DietContextType | undefined>(undefined);
@@ -57,6 +64,7 @@ interface DietProviderProps {
 export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
     const [database, setDatabase] = useState<FoodDatabase>({});
     const [dailyDiet, setDailyDiet] = useState<DailyDietItem[]>([]);
+    const [mealTemplates, setMealTemplates] = useState<MealTemplate[]>([]);
 
     // Fetch initial data from Supabase
     useEffect(() => {
@@ -98,6 +106,13 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 setDailyDiet(transformedData);
             })
             .catch(err => console.error('Failed to fetch daily diet:', err));
+            
+        // Fetch meal templates from Supabase
+        mealTemplatesTable.getAll()
+            .then(data => {
+                setMealTemplates(data);
+            })
+            .catch(err => console.error('Failed to fetch meal templates:', err));
     }, []);
 
     const removeFoodEntry = async (index: number): Promise<void> => {
@@ -204,9 +219,129 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
             console.error('Error adding food entry to daily diet:', error);
         }
     };
+    
+    const createMealTemplate = async (name: string, description: string, selectedFoods: Array<Food & { name: string }>): Promise<void> => {
+        try {
+            // Transform the selected foods into the appropriate format for storage
+            const templateFoods: MealTemplateFood[] = selectedFoods.map(food => ({
+                food_id: food.id,
+                name: food.name,
+                serving_size: food.serving_size,
+                protein: food.protein,
+                carbs: food.carbs,
+                fat: food.fat,
+                calories: food.calories,
+                unit: food.unit
+            }));
+            
+            // Create the template in Supabase
+            const newTemplate = await mealTemplatesTable.add({
+                name,
+                description,
+                foods_json: templateFoods
+            });
+            
+            // Update local state
+            setMealTemplates(prev => [...prev, newTemplate]);
+        } catch (error) {
+            console.error('Error creating meal template:', error);
+            throw error;
+        }
+    };
+    
+    const getMealTemplate = async (id: number): Promise<MealTemplate> => {
+        try {
+            const template = await mealTemplatesTable.getById(id);
+            return template;
+        } catch (error) {
+            console.error('Error getting meal template:', error);
+            throw error;
+        }
+    };
+    
+    const updateMealTemplate = async (id: number, updates: Partial<MealTemplate>): Promise<void> => {
+        try {
+            // Update in Supabase
+            const updatedTemplate = await mealTemplatesTable.update(id, updates);
+            
+            // Update local state
+            setMealTemplates(prev => 
+                prev.map(template => 
+                    template.id === id ? updatedTemplate : template
+                )
+            );
+        } catch (error) {
+            console.error('Error updating meal template:', error);
+            throw error;
+        }
+    };
+    
+    const deleteMealTemplate = async (id: number): Promise<void> => {
+        try {
+            // Update local state immediately for better UX
+            setMealTemplates(prev => 
+                prev.filter(template => template.id !== id)
+            );
+            
+            // Delete from Supabase
+            await mealTemplatesTable.delete(id);
+        } catch (error) {
+            console.error('Error deleting meal template:', error);
+            // Revert local state if server operation failed
+            mealTemplatesTable.getAll()
+                .then(data => setMealTemplates(data))
+                .catch(err => console.error('Failed to fetch meal templates after error:', err));
+            throw error;
+        }
+    };
+    
+    const applyMealTemplate = async (templateId: number, date: string, mealType: string = 'Breakfast'): Promise<void> => {
+        try {
+            // Fetch the template
+            const template = await mealTemplatesTable.getById(templateId);
+            
+            // Process each food in the template
+            for (const food of template.foods_json) {
+                // Add each food to the daily diet with the same date and meal type
+                await addFoodEntryToDailyDiet(
+                    {
+                        id: food.food_id,
+                        name: food.name,
+                        protein: food.protein,
+                        carbs: food.carbs || 0,
+                        fat: food.fat || 0,
+                        calories: food.calories,
+                        serving_size: food.serving_size,
+                        unit: food.unit
+                    },
+                    date,
+                    mealType
+                );
+            }
+        } catch (error) {
+            console.error('Error applying meal template:', error);
+            throw error;
+        }
+    };
 
     return (
-        <DietContext.Provider value={{ database, setDatabase, dailyDiet, setDailyDiet, removeFoodEntry, removeFoodFromDatabase, addFoodToDatabase, addFoodEntryToDailyDiet }}>
+        <DietContext.Provider value={{ 
+            database, 
+            setDatabase, 
+            dailyDiet, 
+            setDailyDiet, 
+            mealTemplates,
+            setMealTemplates,
+            removeFoodEntry, 
+            removeFoodFromDatabase, 
+            addFoodToDatabase, 
+            addFoodEntryToDailyDiet,
+            createMealTemplate,
+            getMealTemplate,
+            updateMealTemplate,
+            deleteMealTemplate,
+            applyMealTemplate
+        }}>
             {children}
         </DietContext.Provider>
     );

@@ -12,6 +12,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }
     { path: '/', label: 'Dashboard' },
     { path: '/food-entry', label: 'Food Entry' },
     { path: '/database', label: 'Food Database' },
+    { path: '/meal-templates', label: 'Meal Templates' },
     { path: '/goals', label: 'Goal Setting' },
     { path: '/reports', label: 'Reports' },
   ];

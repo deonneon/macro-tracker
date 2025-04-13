@@ -7,6 +7,7 @@ import { dailyDietTable } from '../lib/supabase';
 import EditFoodEntryModal from './EditFoodEntryModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import QuickAddFood from './QuickAddFood';
+import MealTemplates from './MealTemplates';
 
 // Interface for food entries grouped by meal type
 interface MealGroup {
@@ -203,6 +204,9 @@ const DailyFoodLog: React.FC = () => {
           <FontAwesomeIcon icon={faChevronRight} className="text-gray-600" />
         </button>
       </div>
+      
+      {/* Meal Templates Section */}
+      <MealTemplates date={formattedDate} mealType="Breakfast" />
       
       {/* Quick Add Section */}
       <QuickAddFood className="mb-6 bg-white rounded-lg shadow" />

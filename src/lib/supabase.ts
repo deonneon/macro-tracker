@@ -23,6 +23,29 @@ export interface FoodItem {
   created_at?: string;
 }
 
+// Interface for meal template foods
+export interface MealTemplateFood {
+  food_id: number;
+  name: string;
+  serving_size: number;
+  protein: number;
+  carbs?: number;
+  fat?: number;
+  calories: number;
+  unit: string;
+}
+
+// Interface for meal templates
+export interface MealTemplate {
+  id?: number;
+  user_id?: string;
+  name: string;
+  description?: string;
+  foods_json: MealTemplateFood[];
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Interface for frequently used foods
 export interface FrequentlyUsedFood {
   id?: number;
@@ -527,6 +550,63 @@ export const dailyDietTable = {
   }
 };
 
+// Meal templates table operations
+export const mealTemplatesTable = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('meal_templates')
+      .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async getById(id: number) {
+    const { data, error } = await supabase
+      .from('meal_templates')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async add(template: Omit<MealTemplate, 'id' | 'created_at' | 'updated_at'>) {
+    const { data, error } = await supabase
+      .from('meal_templates')
+      .insert([template])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id: number, template: Partial<Omit<MealTemplate, 'id' | 'created_at' | 'updated_at'>>) {
+    const { data, error } = await supabase
+      .from('meal_templates')
+      .update(template)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: number) {
+    const { error } = await supabase
+      .from('meal_templates')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  }
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -549,6 +629,11 @@ export interface Database {
         Row: FrequentlyUsedFood;
         Insert: Omit<FrequentlyUsedFood, 'id'>;
         Update: Partial<Omit<FrequentlyUsedFood, 'id'>>;
+      };
+      meal_templates: {
+        Row: MealTemplate;
+        Insert: Omit<MealTemplate, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<MealTemplate, 'id' | 'created_at' | 'updated_at'>>;
       };
     };
   };
