@@ -1,5 +1,11 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { foodsTable, dailyDietTable, FoodItem, mealTemplatesTable, MealTemplate, MealTemplateFood } from './lib/supabase';
+
+// Import React Query hooks
+import { useAllFoods, useAddFood, useDeleteFood } from './hooks/useFoodDatabase';
+import { useDailyEntriesByDate, useAddDailyEntry, useDeleteDailyEntry, usePrefetchAdjacentDays } from './hooks/useDailyEntries'; 
+import { useAllMealTemplates, useMealTemplateById, useCreateMealTemplate, useUpdateMealTemplate, useDeleteMealTemplate } from './hooks/useMealTemplates';
+import { format } from 'date-fns';
 
 interface Food {
   id: number;
@@ -62,58 +68,81 @@ interface DietProviderProps {
 }
 
 export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
+    // For storing state in a way compatible with existing code
     const [database, setDatabase] = useState<FoodDatabase>({});
     const [dailyDiet, setDailyDiet] = useState<DailyDietItem[]>([]);
     const [mealTemplates, setMealTemplates] = useState<MealTemplate[]>([]);
+    
+    // Today's date in YYYY-MM-DD format
+    const currentDate = format(new Date(), 'yyyy-MM-dd');
 
-    // Fetch initial data from Supabase
+    // Use React Query hooks for data fetching
+    const { data: foods, isLoading: isLoadingFoods } = useAllFoods();
+    const { data: dailyEntries, isLoading: isLoadingDailyDiet } = useDailyEntriesByDate(currentDate);
+    const { data: templates, isLoading: isLoadingMealTemplates } = useAllMealTemplates();
+    
+    // Get prefetch function from hook
+    const prefetchDays = usePrefetchAdjacentDays();
+    
+    // Mutation hooks
+    const { mutateAsync: addFood } = useAddFood();
+    const { mutateAsync: deleteFood } = useDeleteFood();
+    const { mutateAsync: addDailyEntry } = useAddDailyEntry();
+    const { mutateAsync: deleteDailyEntry } = useDeleteDailyEntry();
+    const { mutateAsync: createTemplate } = useCreateMealTemplate();
+    const { mutateAsync: updateTemplate } = useUpdateMealTemplate();
+    const { mutateAsync: deleteTemplate } = useDeleteMealTemplate();
+
+    // Update state when React Query data changes
     useEffect(() => {
-        // Fetch foods from Supabase
-        foodsTable.getAll()
-            .then(data => {
-                const transformedData: FoodDatabase = {};
-                data.forEach((item: FoodItem) => {
-                    transformedData[item.name] = {
-                        id: item.id || 0,
-                        protein: item.protein,
-                        carbs: item.carbs || 0,
-                        fat: item.fat || 0,
-                        calories: item.calories,
-                        serving_size: item.serving_size || 1,
-                        unit: item.unit
-                    };
-                });
-                setDatabase(transformedData);
-            })
-            .catch(err => console.error('Failed to fetch foods:', err));
-
-        // Fetch daily diet from Supabase
-        dailyDietTable.getAll()
-            .then(data => {
-                // Transform the data to match the DailyDietItem interface
-                const transformedData = data.map(item => ({
-                    id: item.id,
-                    date: item.date,
-                    name: item.name,
+        if (foods) {
+            const transformedData: FoodDatabase = {};
+            foods.forEach((item: FoodItem) => {
+                transformedData[item.name] = {
+                    id: item.id || 0,
                     protein: item.protein,
                     carbs: item.carbs || 0,
                     fat: item.fat || 0,
                     calories: item.calories,
-                    serving_size: 1,
-                    unit: item.unit,
-                    food_id: item.food_id
-                }));
-                setDailyDiet(transformedData);
-            })
-            .catch(err => console.error('Failed to fetch daily diet:', err));
-            
-        // Fetch meal templates from Supabase
-        mealTemplatesTable.getAll()
-            .then(data => {
-                setMealTemplates(data);
-            })
-            .catch(err => console.error('Failed to fetch meal templates:', err));
-    }, []);
+                    serving_size: item.serving_size || 1,
+                    unit: item.unit
+                };
+            });
+            setDatabase(transformedData);
+        }
+    }, [foods]);
+
+    // Update daily diet when React Query data changes
+    useEffect(() => {
+        if (dailyEntries) {
+            // Transform the data to match the DailyDietItem interface
+            const transformedData = dailyEntries.map(item => ({
+                id: item.id,
+                date: item.date,
+                name: item.name,
+                protein: item.protein,
+                carbs: item.carbs || 0,
+                fat: item.fat || 0,
+                calories: item.calories,
+                serving_size: 1,
+                unit: item.unit,
+                food_id: item.food_id
+            }));
+            setDailyDiet(transformedData);
+        }
+    }, [dailyEntries]);
+
+    // Update meal templates when React Query data changes
+    useEffect(() => {
+        if (templates) {
+            setMealTemplates(templates);
+        }
+    }, [templates]);
+
+    // Prefetch adjacent days data
+    useEffect(() => {
+        prefetchDays(currentDate);
+    }, [currentDate, prefetchDays]);
 
     const removeFoodEntry = async (index: number): Promise<void> => {
         try {
@@ -128,33 +157,20 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 return;
             }
 
-            // Update local state immediately for better UX
-            const newDailyDiet = [...dailyDiet];
-            newDailyDiet.splice(index, 1);
-            setDailyDiet(newDailyDiet);
-
-            // Delete from Supabase
-            await dailyDietTable.delete(entry.id);
+            // Let react-query handle the state update
+            await deleteDailyEntry({ id: entry.id, date: entry.date });
         } catch (error) {
             console.error('Error deleting daily diet entry:', error);
-            // Revert the local state if the server deletion failed
-            setDailyDiet(dailyDiet);
+            throw error;
         }
     };
 
     const removeFoodFromDatabase = async (foodName: string): Promise<void> => {
         try {
-            // Update local state immediately for better UX
-            const newDatabase = { ...database };
-            delete newDatabase[foodName];
-            setDatabase(newDatabase);
-
-            // Delete from Supabase
-            await foodsTable.delete(foodName);
+            await deleteFood(foodName);
         } catch (error) {
             console.error('Error deleting food from database:', error);
-            // Revert on error
-            setDatabase(database);
+            throw error;
         }
     };
 
@@ -168,8 +184,7 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
       unit: string 
     }): Promise<void> => {
         try {
-            // Add to Supabase
-            const data = await foodsTable.add({
+            await addFood({
                 name: foodData.name,
                 protein: foodData.protein,
                 carbs: foodData.carbs,
@@ -178,45 +193,22 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 serving_size: foodData.serving_size,
                 unit: foodData.unit
             });
-
-            // Update local state with the response from Supabase
-            setDatabase(prev => ({ 
-                ...prev, 
-                [foodData.name]: {
-                    id: data.id || 0,
-                    protein: data.protein,
-                    carbs: data.carbs || 0,
-                    fat: data.fat || 0,
-                    calories: data.calories,
-                    serving_size: data.serving_size || 1,
-                    unit: data.unit
-                }
-            }));
         } catch (error) {
             console.error('Error adding food to database:', error);
-            throw error; // Re-throw the error to handle it in the component
+            throw error;
         }
     };
 
     const addFoodEntryToDailyDiet = async (foodDetails: Food & { name: string }, date: string, mealType: string = 'Breakfast'): Promise<void> => {
         try {
-            // Add to Supabase
-            const data = await dailyDietTable.add({
+            await addDailyEntry({
                 date,
                 food_id: foodDetails.id,
                 meal_type: mealType
             });
-
-            // Add to local state with the response
-            const newEntry = { 
-                ...foodDetails, 
-                date, 
-                id: data.id || 0 
-            };
-            
-            setDailyDiet(prevDailyDiet => [...prevDailyDiet, newEntry]);
         } catch (error) {
             console.error('Error adding food entry to daily diet:', error);
+            throw error;
         }
     };
     
@@ -234,15 +226,11 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 unit: food.unit
             }));
             
-            // Create the template in Supabase
-            const newTemplate = await mealTemplatesTable.add({
+            await createTemplate({
                 name,
                 description,
                 foods_json: templateFoods
             });
-            
-            // Update local state
-            setMealTemplates(prev => [...prev, newTemplate]);
         } catch (error) {
             console.error('Error creating meal template:', error);
             throw error;
@@ -261,15 +249,7 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
     
     const updateMealTemplate = async (id: number, updates: Partial<MealTemplate>): Promise<void> => {
         try {
-            // Update in Supabase
-            const updatedTemplate = await mealTemplatesTable.update(id, updates);
-            
-            // Update local state
-            setMealTemplates(prev => 
-                prev.map(template => 
-                    template.id === id ? updatedTemplate : template
-                )
-            );
+            await updateTemplate({ id, template: updates });
         } catch (error) {
             console.error('Error updating meal template:', error);
             throw error;
@@ -278,19 +258,9 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
     
     const deleteMealTemplate = async (id: number): Promise<void> => {
         try {
-            // Update local state immediately for better UX
-            setMealTemplates(prev => 
-                prev.filter(template => template.id !== id)
-            );
-            
-            // Delete from Supabase
-            await mealTemplatesTable.delete(id);
+            await deleteTemplate(id);
         } catch (error) {
             console.error('Error deleting meal template:', error);
-            // Revert local state if server operation failed
-            mealTemplatesTable.getAll()
-                .then(data => setMealTemplates(data))
-                .catch(err => console.error('Failed to fetch meal templates after error:', err));
             throw error;
         }
     };
