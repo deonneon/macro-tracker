@@ -27,21 +27,13 @@ ChartJS.register(
   Filler
 );
 
-interface DateRange {
-  startDate: Date;
-  endDate: Date;
-  label: string;
-}
-
 interface NutritionTrendChartProps {
   data: any[];
-  dateRange: DateRange;
   macroGoal: MacroGoal | null;
 }
 
 const NutritionTrendChart: React.FC<NutritionTrendChartProps> = ({ 
   data,
-  dateRange,
   macroGoal
 }) => {
   const [showProtein, setShowProtein] = useState<boolean>(true);

@@ -208,7 +208,6 @@ const ReportsPage: React.FC = () => {
                 <h2 className="text-xl font-semibold mb-4">Nutrition Trends</h2>
                 <NutritionTrendChart 
                   data={filteredData} 
-                  dateRange={dateRange}
                   macroGoal={macroGoal}
                 />
               </div>

@@ -14,7 +14,7 @@ import {
 import annotationPlugin from 'chartjs-plugin-annotation';
 import { Bar } from 'react-chartjs-2';
 import { DietContext } from '../DietContext';
-import { format, subDays, isAfter, subMonths } from 'date-fns';
+import { format, subDays} from 'date-fns';
 import { MacroGoal } from '../types/goals';
 import { goalsTable } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';

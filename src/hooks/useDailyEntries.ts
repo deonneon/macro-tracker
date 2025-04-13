@@ -131,7 +131,7 @@ export const useUpdateDailyEntry = () => {
       const result = await dailyDietTable.update(id, updates);
       return { result, originalDate, newDate: updates.date };
     },
-    onSuccess: ({ result, originalDate, newDate }) => {
+    onSuccess: ({ originalDate, newDate }) => {
       // Invalidate the original date query
       queryClient.invalidateQueries({ queryKey: dailyEntriesKeys.byDate(originalDate) });
       

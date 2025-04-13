@@ -133,9 +133,10 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({
   }, [dailyTotals]);
   
   // Helper function to calculate goal percentage
-  const calculateGoalPercentage = (value: number, goalValue: number | undefined) => {
+  const calculateGoalPercentage = (value: number, goalValue: number | string | undefined) => {
     if (!goalValue) return null;
-    return Math.round((value / goalValue) * 100);
+    const numericGoal = typeof goalValue === 'string' ? parseFloat(goalValue) : goalValue;
+    return Math.round((value / numericGoal) * 100);
   };
   
   return (

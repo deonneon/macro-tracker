@@ -50,7 +50,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (!goalToDelete) return;
+    if (!goalToDelete || !goalToDelete.id) return;
     
     try {
       await goalsTable.delete(goalToDelete.id);
@@ -112,7 +112,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
                 className={`${goal.id === currentGoalId ? 'bg-indigo-50' : ''} hover:bg-gray-50`}
               >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {format(parseISO(goal.target_date), 'MMM d, yyyy')}
+                  {goal.target_date ? format(parseISO(goal.target_date), 'MMM d, yyyy') : 'No date'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {goal.protein}
@@ -130,7 +130,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
                   <button
                     onClick={() => onEditGoal(goal)}
                     className="text-indigo-600 hover:text-indigo-900 focus:outline-none focus:underline mr-4"
-                    aria-label={`Edit goal for ${format(parseISO(goal.target_date), 'MMM d, yyyy')}`}
+                    aria-label={`Edit goal for ${goal.target_date ? format(parseISO(goal.target_date), 'MMM d, yyyy') : 'No date'}`}
                     tabIndex={0}
                   >
                     Edit
@@ -138,7 +138,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
                   <button
                     onClick={() => handleDeleteClick(goal)}
                     className="text-red-600 hover:text-red-900 focus:outline-none focus:underline"
-                    aria-label={`Delete goal for ${format(parseISO(goal.target_date), 'MMM d, yyyy')}`}
+                    aria-label={`Delete goal for ${goal.target_date ? format(parseISO(goal.target_date), 'MMM d, yyyy') : 'No date'}`}
                     tabIndex={0}
                   >
                     Delete
@@ -153,7 +153,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
       <ConfirmationModal
         isOpen={deleteModalOpen}
         title="Delete Goal"
-        message={goalToDelete ? `Are you sure you want to delete the goal for ${format(parseISO(goalToDelete.target_date), 'MMM d, yyyy')}? This action cannot be undone.` : 'Are you sure you want to delete this goal?'}
+        message={goalToDelete ? `Are you sure you want to delete the goal for ${goalToDelete.target_date ? format(parseISO(goalToDelete.target_date), 'MMM d, yyyy') : 'No date'}? This action cannot be undone.` : 'Are you sure you want to delete this goal?'}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />

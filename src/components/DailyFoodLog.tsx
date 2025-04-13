@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { DietContext } from '../DietContext';
-import { format, addDays, subDays, parseISO } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronLeft, faChevronRight, faEdit, faTrash, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { dailyDietTable } from '../lib/supabase';
@@ -53,7 +53,6 @@ const DailyFoodLog: React.FC = () => {
     throw new Error('DailyFoodLog must be used within a DietProvider');
   }
   
-  const { removeFoodEntry } = dietContext;
 
   // Format the date to YYYY-MM-DD for API calls
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');

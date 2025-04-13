@@ -80,17 +80,6 @@ export interface DailyDietWithFood {
   meal_type?: string;
 }
 
-// Database response types
-interface FoodResponse {
-  id: number;
-  name: string;
-  protein: number;
-  carbs?: number;
-  fat?: number;
-  calories: number;
-  unit: string;
-}
-
 // Foods table operations
 export const foodsTable = {
   async getAll() {
@@ -164,7 +153,7 @@ export const frequentlyUsedFoodsTable = {
   async initialize() {
     try {
       // Check if the table exists
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('frequently_used_foods')
         .select('id')
         .limit(1);
@@ -489,7 +478,7 @@ export const dailyDietTable = {
     unit?: string;
   }>) {
     // First, get the current entry to ensure it exists
-    const { data: entry, error: fetchError } = await supabase
+    const { error: fetchError } = await supabase
       .from('dailydiet')
       .select('*')
       .eq('id', id)

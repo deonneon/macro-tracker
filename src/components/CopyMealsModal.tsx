@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { DietContext } from '../DietContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarAlt, faChevronLeft, faChevronRight, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -38,7 +38,6 @@ const CopyMealsModal: React.FC<CopyMealsModalProps> = ({ isOpen, onClose, curren
   const [selectedDate, setSelectedDate] = useState<Date>(subDays(new Date(), 1));
   const [groupedEntries, setGroupedEntries] = useState<MealGroup>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [servingSizeModifications, setServingSizeModifications] = useState<{[foodId: number]: number}>({});
 
   const dietContext = useContext(DietContext);
   

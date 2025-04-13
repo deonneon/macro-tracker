@@ -1,6 +1,5 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { DietContext } from '../DietContext';
-import { MealTemplate } from '../lib/supabase';
 
 interface MealTemplatesProps {
   date: string;
