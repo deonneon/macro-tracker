@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -16,7 +16,7 @@ import { Bar } from 'react-chartjs-2';
 import { DietContext } from '../DietContext';
 import { format, subDays} from 'date-fns';
 import { MacroGoal } from '../types/goals';
-import { goalsTable } from '../lib/supabase';
+import { goalsTable, dailyDietTable } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Register Chart.js components
@@ -45,12 +45,16 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
   const [showProtein, setShowProtein] = useState(true);
   const [showCarbs, setShowCarbs] = useState(true);
   const [showFat, setShowFat] = useState(true);
+  const [periodData, setPeriodData] = useState<{
+    proteinPerDay: number[];
+    carbsPerDay: number[];
+    fatPerDay: number[];
+  }>({ proteinPerDay: [], carbsPerDay: [], fatPerDay: [] });
+  const [isLoading, setIsLoading] = useState(true);
   
   if (!dietContext) {
     throw new Error('WeeklyMacroChart must be used within a DietProvider');
   }
-  
-  const { dailyDiet } = dietContext;
   
   // Function to ensure consistent data type for goal values
   const getGoalValue = (value: number | string | undefined): number => {
@@ -107,56 +111,107 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     fetchLatestGoal();
   }, []);
 
-  // Generate dates for the selected time period
-  const generateDates = () => {
+  // Generate dates for the selected time period, memoized
+  const { dates, dateLabels } = useMemo(() => {
     const today = new Date();
-    const dates = [];
-    const dateLabels = [];
+    const datesArr = [];
+    const dateLabelsArr = [];
     
-    // Number of days to include
     const daysToInclude = timePeriod === 'week' ? 7 : 30;
     
     for (let i = daysToInclude - 1; i >= 0; i--) {
       const date = subDays(today, i);
       const formattedDate = format(date, 'yyyy-MM-dd');
-      // Format date label based on time period
       const dayLabel = timePeriod === 'week' 
-        ? format(date, 'E d') // "Mon 1" for week
-        : format(date, 'MMM d'); // "Jan 1" for month
+        ? format(date, 'E d')
+        : format(date, 'MMM d'); 
       
-      dates.push(formattedDate);
-      dateLabels.push(dayLabel);
+      datesArr.push(formattedDate);
+      dateLabelsArr.push(dayLabel);
     }
     
-    return { dates, dateLabels };
-  };
+    return { dates: datesArr, dateLabels: dateLabelsArr };
+  }, [timePeriod]); // Recalculate only when timePeriod changes
   
-  const { dates, dateLabels } = generateDates();
-  
-  // Aggregate macros per day
-  const calculateDailyMacros = () => {
-    const proteinPerDay: number[] = [];
-    const carbsPerDay: number[] = [];
-    const fatPerDay: number[] = [];
-    
-    dates.forEach(date => {
-      const dailyEntries = dailyDiet.filter(entry => entry.date === date);
+  // Fetch data for the period
+  useEffect(() => {
+    // Helper function to fetch data in batches to avoid resource limitations
+    const fetchDataInBatches = async (datesToFetch: string[], batchSize = 3) => {
+      const proteinPerDay: number[] = Array(datesToFetch.length).fill(0);
+      const carbsPerDay: number[] = Array(datesToFetch.length).fill(0);
+      const fatPerDay: number[] = Array(datesToFetch.length).fill(0);
       
-      const dailyTotals = dailyEntries.reduce((acc, entry) => ({
-        protein: acc.protein + (entry.protein || 0),
-        carbs: acc.carbs + (entry.carbs || 0),
-        fat: acc.fat + (entry.fat || 0)
-      }), { protein: 0, carbs: 0, fat: 0 });
+      // Process dates in smaller batches
+      for (let i = 0; i < datesToFetch.length; i += batchSize) {
+        const batchDates = datesToFetch.slice(i, i + batchSize);
+        
+        try {
+          // Fetch this batch in parallel
+          const batchPromises = batchDates.map(date => 
+            dailyDietTable.getByDate(date)
+              .catch(error => {
+                // Log specific errors but don't stop the process
+                console.warn(`Error fetching data for ${date}:`, error.message || error); 
+                return []; // Return empty array on error for this date
+              })
+          );
+          
+          const batchResults = await Promise.all(batchPromises);
+          
+          // Process this batch's results
+          batchResults.forEach((dailyEntries, batchIndex) => {
+            const actualIndex = i + batchIndex;
+            
+            // Check if dailyEntries is actually an array (it might be null/undefined if error occurred)
+            if (Array.isArray(dailyEntries)) {
+                const dailyTotals = dailyEntries.reduce((acc, entry) => ({
+                protein: acc.protein + (entry.protein || 0),
+                carbs: acc.carbs + (entry.carbs || 0),
+                fat: acc.fat + (entry.fat || 0)
+                }), { protein: 0, carbs: 0, fat: 0 });
+                
+                proteinPerDay[actualIndex] = Math.round(dailyTotals.protein);
+                carbsPerDay[actualIndex] = Math.round(dailyTotals.carbs);
+                fatPerDay[actualIndex] = Math.round(dailyTotals.fat);
+            } else {
+                // Handle cases where an error might have returned something else
+                console.warn(`Received non-array data for index ${actualIndex}, setting macros to 0.`);
+                proteinPerDay[actualIndex] = 0;
+                carbsPerDay[actualIndex] = 0;
+                fatPerDay[actualIndex] = 0;
+            }
+          });
+          
+          // Increased delay between batches to avoid overwhelming the API/browser
+          if (i + batchSize < datesToFetch.length) {
+            await new Promise(resolve => setTimeout(resolve, 200)); // Increased delay
+          }
+        } catch (error) {
+          console.error(`Error processing batch starting at index ${i}:`, error);
+        }
+      }
       
-      proteinPerDay.push(Math.round(dailyTotals.protein));
-      carbsPerDay.push(Math.round(dailyTotals.carbs));
-      fatPerDay.push(Math.round(dailyTotals.fat));
-    });
+      return { proteinPerDay, carbsPerDay, fatPerDay };
+    };
     
-    return { proteinPerDay, carbsPerDay, fatPerDay };
-  };
-  
-  const { proteinPerDay, carbsPerDay, fatPerDay } = calculateDailyMacros();
+    const fetchPeriodData = async () => {
+      setIsLoading(true);
+      
+      try {
+        // For week view, we can use a larger batch size since there are fewer dates
+        const batchSize = timePeriod === 'week' ? 3 : 2; 
+        // Use the memoized dates array
+        const data = await fetchDataInBatches(dates, batchSize); 
+        setPeriodData(data);
+      } catch (error) {
+        console.error('Error fetching period data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchPeriodData();
+  }, [dates, timePeriod]); // useEffect depends on the memoized dates and timePeriod
   
   // Calculate visible datasets
   const getVisibleDatasets = () => {
@@ -165,7 +220,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showProtein) {
       datasets.push({
         label: 'Protein',
-        data: proteinPerDay,
+        data: periodData.proteinPerDay,
         backgroundColor: 'rgba(231, 76, 60, 0.7)',
         borderColor: 'rgba(231, 76, 60, 1)',
         borderWidth: 1,
@@ -175,7 +230,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showCarbs) {
       datasets.push({
         label: 'Carbs',
-        data: carbsPerDay,
+        data: periodData.carbsPerDay,
         backgroundColor: 'rgba(46, 204, 113, 0.7)',
         borderColor: 'rgba(46, 204, 113, 1)',
         borderWidth: 1,
@@ -185,7 +240,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showFat) {
       datasets.push({
         label: 'Fat',
-        data: fatPerDay,
+        data: periodData.fatPerDay,
         backgroundColor: 'rgba(241, 196, 15, 0.7)',
         borderColor: 'rgba(241, 196, 15, 1)',
         borderWidth: 1,
@@ -489,19 +544,38 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
       </motion.div>
       
       <AnimatePresence mode="wait">
-        <motion.div 
-          key={timePeriod} 
-          style={{ height: `${height}px` }}
-          variants={chartVariants}
-          initial="hidden"
-          animate="visible"
-          exit={{ opacity: 0, scale: 0.95 }}
-        >
-          <Bar 
-            data={data} 
-            options={options} 
-          />
-        </motion.div>
+        {isLoading ? (
+          <motion.div 
+            key="loading"
+            style={{ height: `${height}px` }}
+            className="h-full flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.3 } }}
+            exit={{ opacity: 0, transition: { duration: 0.3 } }}
+          >
+            <div className="text-gray-400 flex flex-col items-center">
+              <svg className="animate-spin h-8 w-8 mb-2 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Loading data...</span>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key={`chart-${timePeriod}`}
+            style={{ height: `${height}px` }}
+            variants={chartVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <Bar 
+              data={data} 
+              options={options} 
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.div>
   );

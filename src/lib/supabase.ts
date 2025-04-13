@@ -456,6 +456,41 @@ export const dailyDietTable = {
     }));
   },
 
+  async getByDateRange(startDate: string, endDate: string): Promise<DailyDietWithFood[]> {
+    const { data, error } = await supabase
+      .from('dailydiet')
+      .select(`
+        id,
+        date,
+        foods!dailydiet_food_id_fkey (
+          id,
+          name,
+          protein,
+          carbs,
+          fat,
+          calories,
+          unit
+        )
+      `)
+      .gte('date', startDate)
+      .lte('date', endDate);
+    
+    if (error) throw error;
+    
+    // Transform the data to a more usable format
+    return (data as unknown as any[]).map(item => ({
+      id: item.id,
+      date: item.date,
+      name: item.foods.name,
+      protein: item.foods.protein,
+      carbs: item.foods.carbs,
+      fat: item.foods.fat,
+      calories: item.foods.calories,
+      unit: item.foods.unit,
+      food_id: item.foods.id
+    }));
+  },
+
   async add(entry: Omit<DailyDietEntry, 'id' | 'created_at'>) {
     const { data, error } = await supabase
       .from('dailydiet')
