@@ -1,12 +1,12 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { DietContext } from '../DietContext';
 import { MacroGoal } from '../types/goals';
 import DateRangeSelector from '../components/reports/DateRangeSelector';
 import MacroDistributionChart from '../components/reports/MacroDistributionChart';
 import NutritionTrendChart from '../components/reports/NutritionTrendChart';
 import StatisticalAnalysis from '../components/reports/StatisticalAnalysis';
 import ExportConfigModal from '../components/ExportConfigModal';
+import { useDailyEntriesByDateRange } from '../hooks/useDailyEntries';
 
 interface DateRange {
   startDate: Date;
@@ -22,20 +22,20 @@ const ReportsPage: React.FC = () => {
     label: 'Last 7 Days'
   });
   
-  // Filtered data based on date range
-  const [filteredData, setFilteredData] = useState<any[]>([]);
+  // State for data
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [macroGoal, setMacroGoal] = useState<MacroGoal | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState<boolean>(false);
   
-  // Get diet context
-  const dietContext = useContext(DietContext);
+  // Format dates for API
+  const formattedStartDate = format(dateRange.startDate, 'yyyy-MM-dd');
+  const formattedEndDate = format(dateRange.endDate, 'yyyy-MM-dd');
   
-  if (!dietContext) {
-    throw new Error('ReportsPage must be used within a DietProvider');
-  }
-  
-  const { dailyDiet } = dietContext;
+  // Fetch data for the selected date range
+  const { data: dailyEntries, isLoading: isLoadingEntries } = useDailyEntriesByDateRange(
+    formattedStartDate,
+    formattedEndDate
+  );
   
   // Predefined date ranges
   const predefinedRanges = [
@@ -90,30 +90,10 @@ const ReportsPage: React.FC = () => {
     setDateRange(newRange);
   };
   
-  // Filter data based on date range
+  // Update loading state based on API loading state
   useEffect(() => {
-    setIsLoading(true);
-    
-    const filterDataByDateRange = () => {
-      const start = dateRange.startDate;
-      const end = dateRange.endDate;
-      
-      // Format dates as strings for comparison
-      const startStr = format(start, 'yyyy-MM-dd');
-      const endStr = format(end, 'yyyy-MM-dd');
-      
-      // Filter daily diet data
-      const filtered = dailyDiet.filter(item => {
-        const itemDate = item.date;
-        return itemDate >= startStr && itemDate <= endStr;
-      });
-      
-      setFilteredData(filtered);
-      setIsLoading(false);
-    };
-    
-    filterDataByDateRange();
-  }, [dateRange, dailyDiet]);
+    setIsLoading(isLoadingEntries);
+  }, [isLoadingEntries]);
   
   // Fetch macro goals
   useEffect(() => {
@@ -183,7 +163,7 @@ const ReportsPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {filteredData.length === 0 ? (
+          {!dailyEntries || dailyEntries.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center">
               <h3 className="text-xl font-medium text-gray-700">No nutrition data available for the selected date range</h3>
               <p className="mt-2 text-gray-500">Try selecting a different date range or add food entries first.</p>
@@ -194,9 +174,9 @@ const ReportsPage: React.FC = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h2 className="text-xl font-semibold mb-4">Macro Distribution</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  <MacroDistributionChart data={filteredData} />
+                  <MacroDistributionChart data={dailyEntries} />
                   <StatisticalAnalysis 
-                    data={filteredData} 
+                    data={dailyEntries} 
                     macroGoal={macroGoal}
                     dateRange={dateRange}
                   />
@@ -207,7 +187,7 @@ const ReportsPage: React.FC = () => {
               <div className="bg-white rounded-lg shadow p-4">
                 <h2 className="text-xl font-semibold mb-4">Nutrition Trends</h2>
                 <NutritionTrendChart 
-                  data={filteredData} 
+                  data={dailyEntries} 
                   macroGoal={macroGoal}
                 />
               </div>

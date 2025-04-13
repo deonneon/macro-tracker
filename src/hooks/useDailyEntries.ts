@@ -6,6 +6,7 @@ import { format, addDays, subDays } from 'date-fns';
 export const dailyEntriesKeys = {
   all: ['daily-entries'] as const,
   byDate: (date: string) => ['daily-entries', 'by-date', date] as const,
+  byDateRange: (startDate: string, endDate: string) => ['daily-entries', 'by-date-range', startDate, endDate] as const,
   detail: (id: number) => ['daily-entries', 'detail', id] as const,
 };
 
@@ -17,6 +18,21 @@ export const useDailyEntriesByDate = (date: string | Date) => {
     queryKey: dailyEntriesKeys.byDate(formattedDate),
     queryFn: async () => {
       const entries = await dailyDietTable.getByDate(formattedDate);
+      return entries;
+    },
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+};
+
+// Hook to fetch daily entries for a date range
+export const useDailyEntriesByDateRange = (startDate: string | Date, endDate: string | Date) => {
+  const formattedStartDate = typeof startDate === 'string' ? startDate : format(startDate, 'yyyy-MM-dd');
+  const formattedEndDate = typeof endDate === 'string' ? endDate : format(endDate, 'yyyy-MM-dd');
+  
+  return useQuery({
+    queryKey: dailyEntriesKeys.byDateRange(formattedStartDate, formattedEndDate),
+    queryFn: async () => {
+      const entries = await dailyDietTable.getByDateRange(formattedStartDate, formattedEndDate);
       return entries;
     },
     staleTime: 60 * 60 * 1000, // 1 hour
