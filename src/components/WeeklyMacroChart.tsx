@@ -17,6 +17,7 @@ import { DietContext } from '../DietContext';
 import { format, subDays, isAfter, subMonths } from 'date-fns';
 import { MacroGoal } from '../types/goals';
 import { goalsTable } from '../lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Register Chart.js components
 ChartJS.register(
@@ -50,6 +51,47 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
   }
   
   const { dailyDiet } = dietContext;
+  
+  // Function to ensure consistent data type for goal values
+  const getGoalValue = (value: number | string | undefined): number => {
+    if (typeof value === 'string') {
+      return Number(value);
+    }
+    return value || 0;
+  };
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: -10 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+  };
+
+  const chartVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { 
+        type: "spring", 
+        stiffness: 100, 
+        damping: 15,
+        delay: 0.2 
+      }
+    }
+  };
   
   // Fetch the latest goal
   useEffect(() => {
@@ -247,11 +289,11 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
               let goalValue = 0;
               
               if (macroType === 'protein') {
-                goalValue = macroGoal.protein_goal;
+                goalValue = getGoalValue(macroGoal.protein);
               } else if (macroType === 'carbs') {
-                goalValue = macroGoal.carbs_goal;
+                goalValue = getGoalValue(macroGoal.carbs);
               } else if (macroType === 'fat') {
-                goalValue = macroGoal.fat_goal;
+                goalValue = getGoalValue(macroGoal.fat);
               }
               
               if (goalValue) {
@@ -302,13 +344,13 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showProtein) {
       annotations.proteinGoal = {
         type: 'line',
-        yMin: macroGoal.protein_goal,
-        yMax: macroGoal.protein_goal,
+        yMin: getGoalValue(macroGoal.protein),
+        yMax: getGoalValue(macroGoal.protein),
         borderColor: 'rgba(231, 76, 60, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
-          content: `Protein Goal: ${macroGoal.protein_goal}g`,
+          content: `Protein Goal: ${getGoalValue(macroGoal.protein)}g`,
           enabled: true,
           position: 'end',
           backgroundColor: 'rgba(231, 76, 60, 0.7)',
@@ -323,13 +365,13 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showCarbs) {
       annotations.carbsGoal = {
         type: 'line',
-        yMin: macroGoal.carbs_goal,
-        yMax: macroGoal.carbs_goal,
+        yMin: getGoalValue(macroGoal.carbs),
+        yMax: getGoalValue(macroGoal.carbs),
         borderColor: 'rgba(46, 204, 113, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
-          content: `Carbs Goal: ${macroGoal.carbs_goal}g`,
+          content: `Carbs Goal: ${getGoalValue(macroGoal.carbs)}g`,
           enabled: true,
           position: 'end',
           backgroundColor: 'rgba(46, 204, 113, 0.7)',
@@ -344,13 +386,13 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     if (showFat) {
       annotations.fatGoal = {
         type: 'line',
-        yMin: macroGoal.fat_goal,
-        yMax: macroGoal.fat_goal,
+        yMin: getGoalValue(macroGoal.fat),
+        yMax: getGoalValue(macroGoal.fat),
         borderColor: 'rgba(241, 196, 15, 0.5)',
         borderWidth: 2,
         borderDash: [6, 6],
         label: {
-          content: `Fat Goal: ${macroGoal.fat_goal}g`,
+          content: `Fat Goal: ${getGoalValue(macroGoal.fat)}g`,
           enabled: true,
           position: 'end',
           backgroundColor: 'rgba(241, 196, 15, 0.7)',
@@ -374,104 +416,94 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
   const handleTimePeriodChange = (period: TimePeriod) => {
     setTimePeriod(period);
   };
-  
+
   return (
-    <div className="p-4 bg-white rounded-lg shadow-sm">
-      {/* Controls Bar */}
-      <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-        {/* Time Period Selector */}
-        <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-gray-600">Time Period:</span>
-          <div className="flex border rounded-md overflow-hidden">
-            <button 
-              onClick={() => handleTimePeriodChange('week')}
-              className={`px-3 py-1 text-sm ${
-                timePeriod === 'week' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              aria-label="Show weekly data"
-            >
-              Week
-            </button>
-            <button 
-              onClick={() => handleTimePeriodChange('month')}
-              className={`px-3 py-1 text-sm ${
-                timePeriod === 'month' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-              aria-label="Show monthly data"
-            >
-              Month
-            </button>
-          </div>
-        </div>
+    <motion.div
+      className="w-full"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div 
+        className="flex flex-wrap justify-between items-center mb-4"
+        variants={itemVariants}
+      >
+        <motion.h3 
+          className="text-lg font-semibold"
+          variants={itemVariants}
+        >
+          {timePeriod === 'week' ? 'Weekly' : 'Monthly'} Macro Overview
+        </motion.h3>
         
-        {/* Macro Toggles */}
-        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
-          <button
-            onClick={() => setShowProtein(!showProtein)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs sm:text-sm border ${
-              showProtein 
-                ? 'bg-red-100 border-red-300 text-red-800' 
-                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
-            }`}
-            aria-label={`${showProtein ? 'Hide' : 'Show'} protein data`}
-            aria-pressed={showProtein}
+        <motion.div 
+          className="flex space-x-2 text-sm" 
+          variants={itemVariants}
+        >
+          <motion.button
+            className={`px-3 py-1 rounded-full transition-colors ${timePeriod === 'week' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            onClick={() => handleTimePeriodChange('week')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-red-600 ${showProtein ? 'opacity-100' : 'opacity-30'}`}></div>
-            <span>Protein</span>
-          </button>
-          
-          <button
-            onClick={() => setShowCarbs(!showCarbs)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs sm:text-sm border ${
-              showCarbs 
-                ? 'bg-green-100 border-green-300 text-green-800' 
-                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
-            }`}
-            aria-label={`${showCarbs ? 'Hide' : 'Show'} carbs data`}
-            aria-pressed={showCarbs}
+            Week
+          </motion.button>
+          <motion.button
+            className={`px-3 py-1 rounded-full transition-colors ${timePeriod === 'month' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            onClick={() => handleTimePeriodChange('month')}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-green-600 ${showCarbs ? 'opacity-100' : 'opacity-30'}`}></div>
-            <span>Carbs</span>
-          </button>
-          
-          <button
-            onClick={() => setShowFat(!showFat)}
-            className={`flex items-center space-x-1 px-2 py-1 rounded-md text-xs sm:text-sm border ${
-              showFat 
-                ? 'bg-yellow-100 border-yellow-300 text-yellow-800' 
-                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
-            }`}
-            aria-label={`${showFat ? 'Hide' : 'Show'} fat data`}
-            aria-pressed={showFat}
-          >
-            <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-yellow-600 ${showFat ? 'opacity-100' : 'opacity-30'}`}></div>
-            <span>Fat</span>
-          </button>
-        </div>
-      </div>
+            Month
+          </motion.button>
+        </motion.div>
+      </motion.div>
       
-      <div className="relative" style={{ height: `${height}px` }}>
-        {(!showProtein && !showCarbs && !showFat) ? (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-500">
-            Please select at least one macro to display
-          </div>
-        ) : (
-          <Bar data={data} options={options} />
-        )}
-      </div>
+      <motion.div 
+        className="flex flex-wrap gap-2 mb-4" 
+        variants={itemVariants}
+      >
+        <motion.button
+          className={`px-3 py-1 rounded-full text-xs border transition-colors ${showProtein ? 'bg-red-100 border-red-500 text-red-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
+          onClick={() => setShowProtein(!showProtein)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Protein
+        </motion.button>
+        <motion.button
+          className={`px-3 py-1 rounded-full text-xs border transition-colors ${showCarbs ? 'bg-green-100 border-green-500 text-green-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
+          onClick={() => setShowCarbs(!showCarbs)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Carbs
+        </motion.button>
+        <motion.button
+          className={`px-3 py-1 rounded-full text-xs border transition-colors ${showFat ? 'bg-yellow-100 border-yellow-500 text-yellow-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
+          onClick={() => setShowFat(!showFat)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Fat
+        </motion.button>
+      </motion.div>
       
-      {/* Legend Note */}
-      <div className="mt-2 text-xs text-gray-500 text-center">
-        <p>Dashed lines represent your daily macro goals. Click toggles above to show/hide macros.</p>
-        {timePeriod === 'month' && (
-          <p className="mt-1">Showing data for the past 30 days. Hover over bars for detailed information.</p>
-        )}
-      </div>
-    </div>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={timePeriod} 
+          style={{ height: `${height}px` }}
+          variants={chartVariants}
+          initial="hidden"
+          animate="visible"
+          exit={{ opacity: 0, scale: 0.95 }}
+        >
+          <Bar 
+            data={data} 
+            options={options} 
+          />
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
