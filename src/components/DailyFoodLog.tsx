@@ -2,12 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import { DietContext } from '../DietContext';
 import { format, addDays, subDays, parseISO } from 'date-fns';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faChevronRight, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faChevronLeft, faChevronRight, faEdit, faTrash, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { dailyDietTable } from '../lib/supabase';
 import EditFoodEntryModal from './EditFoodEntryModal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import QuickAddFood from './QuickAddFood';
 import MealTemplates from './MealTemplates';
+import CopyMealsModal from './CopyMealsModal';
 
 // Interface for food entries grouped by meal type
 interface MealGroup {
@@ -43,6 +44,8 @@ const DailyFoodLog: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  // State for copy meals modal
+  const [copyMealsModalOpen, setCopyMealsModalOpen] = useState<boolean>(false);
 
   const dietContext = useContext(DietContext);
   
@@ -192,6 +195,16 @@ const DailyFoodLog: React.FC = () => {
             className="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Select date"
           />
+          <button 
+            onClick={() => setCopyMealsModalOpen(true)}
+            className="ml-2 p-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center"
+            aria-label="Copy meals from previous days"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && setCopyMealsModalOpen(true)}
+          >
+            <FontAwesomeIcon icon={faCopy} className="mr-1" />
+            <span className="hidden sm:inline">Copy Meals</span>
+          </button>
         </div>
         
         <button 
@@ -323,6 +336,13 @@ const DailyFoodLog: React.FC = () => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteEntry}
         itemName={selectedEntry?.name || ''}
+      />
+
+      {/* Copy Meals Modal */}
+      <CopyMealsModal
+        isOpen={copyMealsModalOpen}
+        onClose={() => setCopyMealsModalOpen(false)}
+        currentDate={formattedDate}
       />
     </div>
   );
