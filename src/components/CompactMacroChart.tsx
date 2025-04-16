@@ -38,6 +38,7 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
     carbsPerDay: number[];
     fatPerDay: number[];
   }>({ proteinPerDay: [], carbsPerDay: [], fatPerDay: [] });
+  const [caloriesPerDay, setCaloriesPerDay] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   if (!dietContext) {
@@ -105,22 +106,33 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
       const proteinPerDay: number[] = Array(datesToFetch.length).fill(0);
       const carbsPerDay: number[] = Array(datesToFetch.length).fill(0);
       const fatPerDay: number[] = Array(datesToFetch.length).fill(0);
+      const caloriesPerDay: number[] = Array(datesToFetch.length).fill(0);
       
       try {
-        // Process each date
         const batchPromises = datesToFetch.map((date, index) => 
           dailyDietTable.getByDate(date)
             .then(dailyEntries => {
               if (Array.isArray(dailyEntries)) {
-                const dailyTotals = dailyEntries.reduce((acc, entry) => ({
+                let dailyTotals = dailyEntries.reduce((acc, entry) => ({
                   protein: acc.protein + (entry.protein || 0),
                   carbs: acc.carbs + (entry.carbs || 0),
-                  fat: acc.fat + (entry.fat || 0)
-                }), { protein: 0, carbs: 0, fat: 0 });
+                  fat: acc.fat + (entry.fat || 0),
+                  calories: acc.calories + (entry.calories || 0),
+                  hasCalories: acc.hasCalories || (typeof entry.calories === 'number')
+                }), { protein: 0, carbs: 0, fat: 0, calories: 0, hasCalories: false });
                 
                 proteinPerDay[index] = Math.round(dailyTotals.protein);
                 carbsPerDay[index] = Math.round(dailyTotals.carbs);
                 fatPerDay[index] = Math.round(dailyTotals.fat);
+                
+                // Use calories from DB if available, else calculate
+                if (dailyTotals.hasCalories) {
+                  caloriesPerDay[index] = Math.round(dailyTotals.calories);
+                } else {
+                  caloriesPerDay[index] = Math.round(
+                    dailyTotals.protein * 4 + dailyTotals.carbs * 4 + dailyTotals.fat * 9
+                  );
+                }
               }
             })
             .catch(error => {
@@ -129,10 +141,10 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         );
         
         await Promise.all(batchPromises);
-        return { proteinPerDay, carbsPerDay, fatPerDay };
+        return { proteinPerDay, carbsPerDay, fatPerDay, caloriesPerDay };
       } catch (error) {
         console.error('Error fetching period data:', error);
-        return { proteinPerDay, carbsPerDay, fatPerDay };
+        return { proteinPerDay, carbsPerDay, fatPerDay, caloriesPerDay };
       }
     };
     
@@ -140,7 +152,12 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
       setIsLoading(true);
       try {
         const fetchedData = await fetchDataInBatches(dates);
-        setPeriodData(fetchedData);
+        setPeriodData({
+          proteinPerDay: fetchedData.proteinPerDay,
+          carbsPerDay: fetchedData.carbsPerDay,
+          fatPerDay: fetchedData.fatPerDay
+        });
+        setCaloriesPerDay(fetchedData.caloriesPerDay);
       } catch (error) {
         console.error('Error fetching period data:', error);
       } finally {
@@ -151,8 +168,8 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
     fetchPeriodData();
   }, [dates]);
   
-  // Prepare chart data
-  const data = {
+  // Prepare chart data for protein
+  const proteinData = {
     labels: dateLabels,
     datasets: [
       {
@@ -161,69 +178,48 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         backgroundColor: 'rgba(231, 76, 60, 0.7)',
         borderColor: 'rgba(231, 76, 60, 1)',
         borderWidth: 1,
-      },
+      }
+    ]
+  };
+  
+  // Prepare chart data for calories
+  const caloriesData = {
+    labels: dateLabels,
+    datasets: [
       {
-        label: 'Carbs',
-        data: periodData.carbsPerDay,
-        backgroundColor: 'rgba(46, 204, 113, 0.7)',
-        borderColor: 'rgba(46, 204, 113, 1)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Fat',
-        data: periodData.fatPerDay,
-        backgroundColor: 'rgba(241, 196, 15, 0.7)',
-        borderColor: 'rgba(241, 196, 15, 1)',
+        label: 'Calories',
+        data: caloriesPerDay,
+        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+        borderColor: 'rgba(52, 152, 219, 1)',
         borderWidth: 1,
       }
     ]
   };
   
-  // Chart options - simplified for compact view
-  const options: ChartOptions<'bar'> = {
+  // Chart options for both charts (reuse, but allow label override)
+  const baseOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
       x: {
         stacked: false,
-        grid: {
-          display: false
-        }
+        grid: { display: false }
       },
       y: {
         stacked: false,
-        grid: {
-          color: 'rgba(200, 200, 200, 0.2)'
-        },
-        ticks: {
-          precision: 0
-        }
+        grid: { color: 'rgba(200, 200, 200, 0.2)' },
+        ticks: { precision: 0 }
       }
     },
     plugins: {
-      title: {
-        display: false
-      },
+      title: { display: false },
       legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 10,
-          boxHeight: 8,
-          boxWidth: 8,
-          font: {
-            size: 10
-          }
-        }
+        display: false,
       },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: {
-          size: 12
-        },
-        bodyFont: {
-          size: 11
-        },
+        titleFont: { size: 12 },
+        bodyFont: { size: 11 },
         padding: 8,
         displayColors: true,
         boxWidth: 8,
@@ -238,35 +234,33 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
           label: (context) => {
             const label = context.dataset.label || '';
             const value = context.parsed.y;
-            
-            let percentOfGoal = '';
-            if (macroGoal) {
-              // Calculate percentage of goal
-              const macroType = label.toLowerCase();
-              let goalValue = 0;
-              
-              if (macroType === 'protein') {
-                goalValue = getGoalValue(macroGoal.protein);
-              } else if (macroType === 'carbs') {
-                goalValue = getGoalValue(macroGoal.carbs);
-              } else if (macroType === 'fat') {
-                goalValue = getGoalValue(macroGoal.fat);
+            if (label === 'Protein') {
+              let percentOfGoal = '';
+              if (macroGoal) {
+                const goalValue = getGoalValue(macroGoal.protein);
+                if (goalValue) {
+                  const percentage = Math.round((value / goalValue) * 100);
+                  percentOfGoal = ` (${percentage}% of goal)`;
+                }
               }
-              
-              if (goalValue) {
-                const percentage = Math.round((value / goalValue) * 100);
-                percentOfGoal = ` (${percentage}% of goal)`;
+              return `${label}: ${value}g${percentOfGoal}`;
+            } else if (label === 'Calories') {
+              let percentOfGoal = '';
+              if (macroGoal) {
+                const goalValue = getGoalValue(macroGoal.calories);
+                if (goalValue) {
+                  const percentage = Math.round((value / goalValue) * 100);
+                  percentOfGoal = ` (${percentage}% of goal)`;
+                }
               }
+              return `${label}: ${value} kcal${percentOfGoal}`;
             }
-            
-            return `${label}: ${value}g${percentOfGoal}`;
+            return `${label}: ${value}`;
           }
         }
       }
     },
-    animation: {
-      duration: 500
-    }
+    animation: { duration: 500 }
   };
   
   return (
@@ -289,18 +283,28 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
           </div>
         </div>
       ) : (
-        <motion.div 
-          style={{ height: `${height}px` }}
-          variants={chartVariants}
-          initial="hidden"
-          animate="visible"
-          className="pt-1"
-        >
-          <Bar 
-            data={data} 
-            options={options} 
-          />
-        </motion.div>
+        <div className="flex gap-4" style={{ height: `${height}px` }}>
+          <motion.div
+            className="w-1/2 pt-1"
+            variants={chartVariants}
+            initial="hidden"
+            animate="visible"
+            aria-label="Protein intake bar chart for last 5 days"
+            tabIndex={0}
+          >
+            <Bar data={proteinData} options={baseOptions} />
+          </motion.div>
+          <motion.div
+            className="w-1/2 pt-1"
+            variants={chartVariants}
+            initial="hidden"
+            animate="visible"
+            aria-label="Calories intake bar chart for last 5 days"
+            tabIndex={0}
+          >
+            <Bar data={caloriesData} options={baseOptions} />
+          </motion.div>
+        </div>
       )}
     </div>
   );
