@@ -7,7 +7,7 @@ import { useDailyEntriesByDate, useAddDailyEntry, useDeleteDailyEntry, usePrefet
 import { useAllMealTemplates, useCreateMealTemplate, useUpdateMealTemplate, useDeleteMealTemplate } from './hooks/useMealTemplates';
 import { format } from 'date-fns';
 
-interface Food {
+export interface Food {
   id: number;
   protein: number;
   carbs: number;

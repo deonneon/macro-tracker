@@ -1,12 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { DietContext } from '../DietContext';
-import WeeklyMacroChart from '../components/WeeklyMacroChart';
+import CompactMacroChart from '../components/CompactMacroChart';
 import { goalsTable } from '../lib/supabase';
 import { MacroGoal } from '../types/goals';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import DailyFoodLog from '../components/DailyFoodLog';
 import SimpleDailyFoodTable from '../components/SimpleDailyFoodTable';
+import FoodDatabaseSidebar from '../components/FoodDatabaseSidebar';
 
 const DiaryPage: React.FC = () => {
     const dietContext = useContext(DietContext);
@@ -17,7 +18,7 @@ const DiaryPage: React.FC = () => {
         throw new Error('Dashboard must be used within a DietProvider');
     }
 
-    const { dailyDiet } = dietContext;
+    const { dailyDiet, database } = dietContext;
 
     // Calculate today's date in YYYY-MM-DD format
     const today = new Date();
@@ -64,49 +65,46 @@ const DiaryPage: React.FC = () => {
     const todaysDietEntries = dailyDiet.filter(entry => entry.date === formattedToday);
 
     return (
-        <motion.div 
-            className="flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 w-full max-w-7xl mx-auto"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-        >
-            {/* Macro Progress Component - replaced with SimpleDailyFoodTable */}
-            <motion.div 
-                className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
-                variants={itemVariants}
-            >
-                {!isLoading && currentGoal ? (
-                    <SimpleDailyFoodTable entries={todaysDietEntries} />
-                ) : (
-                    <div className="flex items-center justify-center h-24 text-gray-500 text-base" aria-busy="true" aria-label="Loading macro progress">
-                        Loading macro progress...
-                    </div>
-                )}
-            </motion.div>
-            
-            {/* Weekly Overview Chart */}
-            <motion.div 
-                className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
-                variants={itemVariants}
-            >
-                <WeeklyMacroChart height={300} />
-            </motion.div>
-            
-            {/* Message if no goal is set */}
-            {!isLoading && !currentGoal && (
+        <div className="flex flex-col lg:flex-row w-full max-w-7xl mx-auto h-full overflow-auto">
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <motion.div 
                     className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
                     variants={itemVariants}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: 0.6 }}
                 >
-                    <p className="text-sm sm:text-base text-yellow-700">
-                        You haven't set any macro goals yet. Please go to the <a href="/goals" className="text-blue-600 hover:underline" tabIndex={0} aria-label="Go to Goal Setting page">Goal Setting</a> page to set your targets.
-                    </p>
+                    {!isLoading && currentGoal ? (
+                        <SimpleDailyFoodTable entries={todaysDietEntries} />
+                    ) : (
+                        <div className="flex items-center justify-center h-24 text-gray-500 text-base" aria-busy="true" aria-label="Loading macro progress">
+                            Loading macro progress...
+                        </div>
+                    )}
                 </motion.div>
-            )}
-        </motion.div>
+                <motion.div 
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
+                    variants={itemVariants}
+                >
+                    <CompactMacroChart height={180} />
+                </motion.div>
+                {!isLoading && !currentGoal && (
+                    <motion.div 
+                        className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
+                        variants={itemVariants}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                        <p className="text-sm sm:text-base text-yellow-700">
+                            You haven't set any macro goals yet. Please go to the <a href="/goals" className="text-blue-600 hover:underline" tabIndex={0} aria-label="Go to Goal Setting page">Goal Setting</a> page to set your targets.
+                        </p>
+                    </motion.div>
+                )}
+            </div>
+            {/* Sidebar */}
+            <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-200 bg-gray-50">
+                <FoodDatabaseSidebar database={database} />
+            </div>
+        </div>
     );
 };
 
