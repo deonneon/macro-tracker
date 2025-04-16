@@ -16,14 +16,34 @@ CREATE TABLE dailydiet (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+-- Create macro_goals table
+CREATE TABLE macro_goals (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    target_date DATE NOT NULL,
+    calories INTEGER NOT NULL,
+    protein DECIMAL(10,2) NOT NULL,
+    carbs DECIMAL(10,2) NOT NULL,
+    fat DECIMAL(10,2) NOT NULL,
+    user_id UUID NOT NULL,
+    CONSTRAINT positive_calories CHECK (calories >= 0),
+    CONSTRAINT positive_protein CHECK (protein >= 0),
+    CONSTRAINT positive_carbs CHECK (carbs >= 0),
+    CONSTRAINT positive_fat CHECK (fat >= 0)
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_foods_name ON foods(name);
 CREATE INDEX idx_dailydiet_date ON dailydiet(date);
 CREATE INDEX idx_dailydiet_food_id ON dailydiet(food_id);
+CREATE INDEX idx_macro_goals_created_at ON macro_goals(created_at);
+CREATE INDEX idx_macro_goals_target_date ON macro_goals(target_date);
+CREATE INDEX idx_macro_goals_user_id ON macro_goals(user_id);
 
 -- Set up Row Level Security (RLS)
 ALTER TABLE foods ENABLE ROW LEVEL SECURITY;
 ALTER TABLE dailydiet ENABLE ROW LEVEL SECURITY;
+ALTER TABLE macro_goals ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
 CREATE POLICY "Enable read access for all users" ON foods
@@ -42,4 +62,16 @@ CREATE POLICY "Enable insert for all users" ON dailydiet
     FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Enable delete for all users" ON dailydiet
-    FOR DELETE USING (true); 
+    FOR DELETE USING (true);
+
+CREATE POLICY "Enable read access for all users" ON macro_goals
+    FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert for authenticated users" ON macro_goals
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable update for goal owners" ON macro_goals
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Enable delete for goal owners" ON macro_goals
+    FOR DELETE USING (auth.uid() = user_id); 

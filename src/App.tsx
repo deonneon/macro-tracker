@@ -1,68 +1,50 @@
-import React, { useState } from 'react';
-import './styles.css';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DietProvider } from './DietContext';
-import Navbar from './Navbar';
-import FoodInput from './FoodInput';
-import DailyDietList from './DailyDietList';
-import Dashboard from './Dashboard';
-import DatabasePage from './DatabasePage';
-import IconButton from './IconButton';
-import QAPage from './QAPage';
-import riceIcon from './icons/rice.png';
-import bananaIcon from './icons/banana.png';
-import { FaBars } from 'react-icons/fa'; // FaBars is a common hamburger icon in Font Awesome
+import Layout from './components/Layout';
+import QueryProvider from './components/QueryProvider';
+// We're not going to use CachingDietProvider directly now to avoid the context error
+// import { CachingDietProvider } from './hooks/useDietContext';
+import SyncService from './services/SyncService';
+
+// Route components
+import Dashboard from './routes/Dashboard';
+import FoodEntryPage from './routes/FoodEntryPage';
+import DatabasePage from './routes/DatabasePage';
+import ReportsPage from './routes/ReportsPage';
+import GoalsPage from './routes/GoalsPage';
+import MealTemplatesPage from './routes/MealTemplatesPage';
+import DiaryPage from './routes/DiaryPage';
 
 const App: React.FC = () => {
-  const [currentPage, setCurrentPage] = useState<string>('main');
-
+  // Initialize sync service when app loads
+  useEffect(() => {
+    SyncService.init();
+    
+    return () => {
+      // Perform any cleanup if needed
+    };
+  }, []);
+  
   return (
-    <DietProvider>
-      <div className="min-h-screen bg-white">
-        <div className="hidden">
-          <Navbar setCurrentPage={setCurrentPage} />
-        </div>
-
-        {currentPage === 'main' && (
-          <div className="flex justify-between w-full h-screen overflow-hidden">
-            <div className="w-[70%] h-screen overflow-y-auto px-[5%] py-8 flex flex-col">
-              {/* Your journal pages go here */}
-              <div className="w-full flex flex-col h-full overflow-y-auto">
-                <div className="flex flex-col w-full h-full">
-                  <div className="mb-auto">
-                    <h1 className="text-2xl font-bold mb-6">Daily Macro Tracker</h1>
-                    <FoodInput />
-                    <DailyDietList />
-                  </div>
-                  <div className="mt-4">
-                    <Dashboard />
-                  </div>
-                </div>
-              </div>
-          
-            </div>
-            <div className="flex-1 border-l border-gray-300 p-5 h-screen overflow-y-auto box-border max-w-[30%] justify-between flex flex-col">
-              <div className="flex-grow overflow-y-auto mb-4">
-                <DatabasePage />
-              </div>
-              <div className="flex flex-wrap justify-center gap-2 mb-4">
-                <IconButton foodName="rice" icon={riceIcon} />
-                <IconButton foodName="banana" icon={bananaIcon} />
-              </div>
-              <div className="text-sm text-gray-600 text-center">
-                Built by Deon
-                <div className="inline-flex items-center justify-center w-6 h-6 ml-2 bg-gray-200 rounded-full">
-                  <FaBars className="w-3 h-3 text-gray-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentPage === 'database' && <DatabasePage />}
-        {currentPage === 'history' && <div><DailyDietList /></div>}
-        {currentPage === 'qa' && <QAPage />}
-      </div>
-    </DietProvider>
+    <QueryProvider>
+      <DietProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="diary" element={<DiaryPage />} />
+              <Route path="food-entry" element={<FoodEntryPage />} />
+              <Route path="database" element={<DatabasePage />} />
+              <Route path="goals" element={<GoalsPage />} />
+              <Route path="reports" element={<ReportsPage />} />
+              <Route path="meal-templates" element={<MealTemplatesPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </DietProvider>
+    </QueryProvider>
   );
 };
 

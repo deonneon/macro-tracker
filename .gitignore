@@ -24,3 +24,19 @@ dist-ssr
 *.sw?
 
 .env
+
+# Added by Claude Task Master
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.vscode
+# OS specific
+# Task files
+tasks.json
+tasks/ 
+
+
+.cursor/mcp.json*
+mcp.json*
+./*/mcp.json*
