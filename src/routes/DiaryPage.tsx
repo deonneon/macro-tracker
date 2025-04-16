@@ -69,11 +69,13 @@ const DiaryPage: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <motion.div 
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-340px)] overflow-hidden"
                     variants={itemVariants}
                 >
                     {!isLoading && currentGoal ? (
-                        <SimpleDailyFoodTable entries={todaysDietEntries} />
+                        <div className="h-full overflow-y-auto">
+                            <SimpleDailyFoodTable entries={todaysDietEntries} />
+                        </div>
                     ) : (
                         <div className="flex items-center justify-center h-24 text-gray-500 text-base" aria-busy="true" aria-label="Loading macro progress">
                             Loading macro progress...
