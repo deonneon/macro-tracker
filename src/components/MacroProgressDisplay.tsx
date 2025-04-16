@@ -70,7 +70,7 @@ const MacroProgressDisplay: React.FC<MacroProgressDisplayProps> = ({
 
   return (
     <motion.div 
-      className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg shadow-sm"
+      className="mb-4 sm:mb-6 p-3 sm:p-4"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}

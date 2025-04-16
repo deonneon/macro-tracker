@@ -107,16 +107,9 @@ const DiaryPage: React.FC = () => {
                         targetCalories={Number(currentGoal.calories)}
                     />
                 ) : (
-                    <MacroProgressDisplay 
-                        currentProtein={50}
-                        currentCarbs={150}
-                        currentFat={40}
-                        currentCalories={1200}
-                        targetProtein={150}
-                        targetCarbs={250}
-                        targetFat={60}
-                        targetCalories={2000}
-                    />
+                    <div className="flex items-center justify-center h-24 text-gray-500 text-base" aria-busy="true" aria-label="Loading macro progress">
+                        Loading macro progress...
+                    </div>
                 )}
             </motion.div>
             
@@ -125,14 +118,13 @@ const DiaryPage: React.FC = () => {
                 className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
                 variants={itemVariants}
             >
-                <h2 className="text-lg sm:text-xl font-semibold mb-2 sm:mb-3">Weekly Macro Overview</h2>
                 <WeeklyMacroChart height={300} />
             </motion.div>
             
             {/* Message if no goal is set */}
             {!isLoading && !currentGoal && (
                 <motion.div 
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm border-l-4 border-yellow-500"
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
                     variants={itemVariants}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
