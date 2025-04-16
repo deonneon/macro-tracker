@@ -38,8 +38,7 @@ const FoodDatabaseSidebar: React.FC<FoodDatabaseSidebarProps> = ({ database }) =
                 >
                   <span className="font-medium text-xs text-gray-900">{name}</span>
                   <span className="text-xs text-gray-600">
-                    P: {food.protein}g | C: {food.carbs}g | F: {food.fat}g | 
-                    {food.calories} cal | {food.serving_size}{food.unit}
+                    Protein: {food.protein}g | {food.calories} cal | {food.serving_size}{food.unit}
                   </span>
                 </li>
               );

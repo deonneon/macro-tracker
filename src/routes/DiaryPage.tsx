@@ -5,7 +5,6 @@ import { goalsTable } from '../lib/supabase';
 import { MacroGoal } from '../types/goals';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
-import DailyFoodLog from '../components/DailyFoodLog';
 import SimpleDailyFoodTable from '../components/SimpleDailyFoodTable';
 import FoodDatabaseSidebar from '../components/FoodDatabaseSidebar';
 
@@ -24,16 +23,6 @@ const DiaryPage: React.FC = () => {
     const today = new Date();
     const formattedToday = format(today, 'yyyy-MM-dd');
 
-    // Animation variants
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.2
-            }
-        }
-    };
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -67,9 +56,9 @@ const DiaryPage: React.FC = () => {
     return (
         <div className="flex h-[calc(100vh-72px)]">
             {/* Main Content */}
-            <div className="flex-1 flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
+            <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <motion.div 
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-340px)] overflow-hidden"
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-336px)] overflow-hidden"
                     variants={itemVariants}
                 >
                     {!isLoading && currentGoal ? (
@@ -83,7 +72,7 @@ const DiaryPage: React.FC = () => {
                     )}
                 </motion.div>
                 <motion.div 
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
+                    className="mt-4"
                     variants={itemVariants}
                 >
                     <CompactMacroChart height={180} />

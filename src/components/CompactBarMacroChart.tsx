@@ -4,39 +4,33 @@ import {
   CategoryScale, 
   LinearScale, 
   BarElement,
-  LineElement,
-  PointElement,
   Title, 
   Tooltip, 
   Legend,
   ChartOptions
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { DietContext } from '../DietContext';
-import { format, subDays, isSameDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { MacroGoal } from '../types/goals';
 import { goalsTable, dailyDietTable } from '../lib/supabase';
 import { motion } from 'framer-motion';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Register Chart.js components
 ChartJS.register(
   CategoryScale, 
   LinearScale, 
   BarElement,
-  LineElement,
-  PointElement,
   Title,
   Tooltip,
-  Legend,
-  ChartDataLabels
+  Legend
 );
 
-interface CompactMacroChartProps {
+interface CompactBarMacroChartProps {
   height?: number;
 }
 
-const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) => {
+const CompactBarMacroChart: React.FC<CompactBarMacroChartProps> = ({ height = 180 }) => {
   const dietContext = useContext(DietContext);
   const [macroGoal, setMacroGoal] = useState<MacroGoal | null>(null);
   const [periodData, setPeriodData] = useState<{
@@ -90,18 +84,19 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
   // Generate dates for the last 5 days, memoized
   const { dates, dateLabels } = useMemo(() => {
     const today = new Date();
-    const datesArr: string[] = [];
-    const dateLabelsArr: string[] = [];
-    for (let i = 6; i >= 0; i--) {
+    const datesArr = [];
+    const dateLabelsArr = [];
+    
+    // Only show last 5 days for compact view
+    for (let i = 4; i >= 0; i--) {
       const date = subDays(today, i);
       const formattedDate = format(date, 'yyyy-MM-dd');
+      const dayLabel = format(date, 'E'); // Just day names for compact view (Mon, Tue, etc)
+      
       datesArr.push(formattedDate);
-      if (isSameDay(date, today)) {
-        dateLabelsArr.push('Today');
-      } else {
-        dateLabelsArr.push(format(date, 'E'));
-      }
+      dateLabelsArr.push(dayLabel);
     }
+    
     return { dates: datesArr, dateLabels: dateLabelsArr };
   }, []); 
   
@@ -180,11 +175,9 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
       {
         label: 'Protein',
         data: periodData.proteinPerDay,
-        showLine: false,
-        pointRadius: 5,
-        pointBackgroundColor: 'rgba(231, 76, 60, 0.9)',
-        pointBorderColor: 'rgba(231, 76, 60, 1)',
-        pointBorderWidth: 2,
+        backgroundColor: 'rgba(231, 76, 60, 0.7)',
+        borderColor: 'rgba(231, 76, 60, 1)',
+        borderWidth: 1,
       }
     ]
   };
@@ -196,17 +189,15 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
       {
         label: 'Calories',
         data: caloriesPerDay,
-        showLine: false,
-        pointRadius: 5,
-        pointBackgroundColor: 'rgba(52, 152, 219, 0.9)',
-        pointBorderColor: 'rgba(52, 152, 219, 1)',
-        pointBorderWidth: 2,
+        backgroundColor: 'rgba(52, 152, 219, 0.7)',
+        borderColor: 'rgba(52, 152, 219, 1)',
+        borderWidth: 1,
       }
     ]
   };
   
   // Chart options for both charts (reuse, but allow label override)
-  const baseOptions: ChartOptions<'line'> = {
+  const baseOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
     scales: {
@@ -216,8 +207,8 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
       },
       y: {
         stacked: false,
-        grid: { display: false },
-        display: false,
+        grid: { color: 'rgba(200, 200, 200, 0.2)' },
+        ticks: { precision: 0 }
       }
     },
     plugins: {
@@ -267,17 +258,7 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
             return `${label}: ${value}`;
           }
         }
-      },
-      // @ts-ignore
-      datalabels: {
-        anchor: 'end',
-        align: 'bottom',
-        font: { weight: 'bold', size: 10 },
-        color: 'transparent',
-        formatter: (value: number) => value,
-        display: true,
-        margin: 0,
-      } as any
+      }
     },
     animation: { duration: 500 }
   };
@@ -285,13 +266,7 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
   return (
     <div className="w-full">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-sm font-medium text-gray-700">Last 7 Days Macros</h3>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className='bg-red-500/90 rounded-full w-2 h-2'></span><span className="text-xs text-gray-500">Protein</span>
-            <span className='bg-blue-500/90 rounded-full w-2 h-2'></span><span className="text-xs text-gray-500">Calories</span>
-          </div>
-        </div>
+        <h3 className="text-sm font-medium text-gray-700">Last 5 Days Macros</h3>
       </div>
       
       {isLoading ? (
@@ -308,39 +283,31 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
           </div>
         </div>
       ) : (
-        <div className="flex gap-8 items-stretch" style={{ height: `${height}px` }}>
-          <div
-            className="w-1/2 bg-white rounded-lg shadow p-4 flex flex-col justify-between"
-            aria-label="Protein chart card"
+        <div className="flex gap-4" style={{ height: `${height}px` }}>
+          <motion.div
+            className="w-1/2 pt-1"
+            variants={chartVariants}
+            initial="hidden"
+            animate="visible"
+            aria-label="Protein intake bar chart for last 5 days"
             tabIndex={0}
           >
-            <motion.div
-              className="flex-1 flex items-end"
-              variants={chartVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <Line data={proteinData} options={baseOptions} />
-            </motion.div>
-          </div>
-          <div
-            className="w-1/2 bg-white rounded-lg shadow p-4 flex flex-col justify-between"
-            aria-label="Calories chart card"
+            <Bar data={proteinData} options={baseOptions} />
+          </motion.div>
+          <motion.div
+            className="w-1/2 pt-1"
+            variants={chartVariants}
+            initial="hidden"
+            animate="visible"
+            aria-label="Calories intake bar chart for last 5 days"
             tabIndex={0}
           >
-            <motion.div
-              className="flex-1 flex items-end"
-              variants={chartVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              <Line data={caloriesData} options={baseOptions} />
-            </motion.div>
-          </div>
+            <Bar data={caloriesData} options={baseOptions} />
+          </motion.div>
         </div>
       )}
     </div>
   );
 };
 
-export default CompactMacroChart; 
+export default CompactBarMacroChart; 
