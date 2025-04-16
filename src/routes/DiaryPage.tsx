@@ -65,7 +65,7 @@ const DiaryPage: React.FC = () => {
     const todaysDietEntries = dailyDiet.filter(entry => entry.date === formattedToday);
 
     return (
-        <div className="flex flex-col lg:flex-row w-full max-w-7xl mx-auto h-full overflow-auto">
+        <div className="flex h-[calc(100vh-72px)]">
             {/* Main Content */}
             <div className="flex-1 flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <motion.div 
@@ -100,8 +100,8 @@ const DiaryPage: React.FC = () => {
                     </motion.div>
                 )}
             </div>
-            {/* Sidebar */}
-            <div className="w-full lg:w-80 xl:w-96 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-gray-200 bg-gray-50">
+            {/* Fixed Sidebar */}
+            <div className="w-60 lg:w-72 flex-shrink-0 border-l border-gray-200 bg-gray-50 h-full">
                 <FoodDatabaseSidebar database={database} />
             </div>
         </div>
