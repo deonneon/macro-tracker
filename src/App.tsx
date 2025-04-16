@@ -14,6 +14,7 @@ import DatabasePage from './routes/DatabasePage';
 import ReportsPage from './routes/ReportsPage';
 import GoalsPage from './routes/GoalsPage';
 import MealTemplatesPage from './routes/MealTemplatesPage';
+import DiaryPage from './routes/DiaryPage';
 
 const App: React.FC = () => {
   // Initialize sync service when app loads
@@ -27,12 +28,12 @@ const App: React.FC = () => {
   
   return (
     <QueryProvider>
-      {/* Use the original DietProvider to maintain compatibility */}
       <DietProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
+              <Route path="diary" element={<DiaryPage />} />
               <Route path="food-entry" element={<FoodEntryPage />} />
               <Route path="database" element={<DatabasePage />} />
               <Route path="goals" element={<GoalsPage />} />

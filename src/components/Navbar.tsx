@@ -27,7 +27,14 @@ const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }
     <nav className="py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
-          <h1 className="text-xl font-bold text-gray-900">Macro Tracker</h1>
+          <NavLink
+            to="/diary"
+            className="text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded transition-colors hover:text-indigo-700"
+            tabIndex={0}
+            aria-label="Go to Diary"
+          >
+            Macro Diary
+          </NavLink>
         </div>
 
         {/* Desktop Navigation */}
