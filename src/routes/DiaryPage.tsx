@@ -26,8 +26,8 @@ const DiaryPage: React.FC = () => {
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        visible: { 
-            opacity: 1, 
+        visible: {
+            opacity: 1,
             y: 0,
             transition: { duration: 0.5 }
         }
@@ -54,10 +54,13 @@ const DiaryPage: React.FC = () => {
     const todaysDietEntries = dailyDiet.filter(entry => entry.date === formattedToday);
 
     return (
-        <div className="flex h-[calc(100vh-72px)]">
+        <div className="flex h-[100vh]">
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
-                <motion.div 
+                <div className="pt-8 pb-6">
+                    <h1 className="text-4xl font-bold">Macro Diary</h1>
+                </div>
+                <motion.div
                     className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-336px)] overflow-hidden"
                     variants={itemVariants}
                 >
@@ -71,14 +74,14 @@ const DiaryPage: React.FC = () => {
                         </div>
                     )}
                 </motion.div>
-                <motion.div 
+                <motion.div
                     className="mt-4"
                     variants={itemVariants}
                 >
                     <CompactMacroChart height={180} />
                 </motion.div>
                 {!isLoading && !currentGoal && (
-                    <motion.div 
+                    <motion.div
                         className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
                         variants={itemVariants}
                         initial={{ opacity: 0, x: -20 }}

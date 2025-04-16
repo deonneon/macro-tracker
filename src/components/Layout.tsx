@@ -14,6 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-white">
+      {!isDiaryRoute && (
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Navbar 
@@ -22,6 +23,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           />
         </div>
       </header>
+      )}
 
       <main className={`${isDiaryRoute ? 'max-w-full' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
         {children || <Outlet />}

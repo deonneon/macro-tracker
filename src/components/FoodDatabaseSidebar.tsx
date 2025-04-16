@@ -14,7 +14,7 @@ const FoodDatabaseSidebar: React.FC<FoodDatabaseSidebarProps> = ({ database }) =
       aria-label="Food Database Sidebar"
       tabIndex={0}
     >
-      <h2 className="text-sm font-semibold mb-2 text-gray-800 px-1 flex-shrink-0" tabIndex={0} aria-label="Food Database">Food Database</h2>
+      <h2 className="text-md font-semibold text-gray-800 px-1 flex-shrink-0 mt-4 mb-2" tabIndex={0} aria-label="Food Database">Food Database</h2>
       <div className="border-t border-gray-100 mb-2 flex-shrink-0"></div>
       <div className="flex-1 overflow-y-auto min-h-0">
         <ul className="space-y-1" role="list">
