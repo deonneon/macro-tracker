@@ -1,21 +1,16 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { DietContext } from '../DietContext';
-import MacroProgressDisplay from '../components/MacroProgressDisplay';
 import WeeklyMacroChart from '../components/WeeklyMacroChart';
 import { goalsTable } from '../lib/supabase';
 import { MacroGoal } from '../types/goals';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import DailyFoodLog from '../components/DailyFoodLog';
+import SimpleDailyFoodTable from '../components/SimpleDailyFoodTable';
 
 const DiaryPage: React.FC = () => {
     const dietContext = useContext(DietContext);
     const [currentGoal, setCurrentGoal] = useState<MacroGoal | null>(null);
-    const [todaysMacros, setTodaysMacros] = useState({
-        protein: 0,
-        carbs: 0,
-        fat: 0,
-        calories: 0
-    });
     const [isLoading, setIsLoading] = useState(true);
 
     if (!dietContext) {
@@ -56,7 +51,6 @@ const DiaryPage: React.FC = () => {
                 setCurrentGoal(latestGoal);
             } catch (error) {
                 console.error('Error fetching latest goal:', error);
-                // Even if there's an error, we should still set loading to false
                 setIsLoading(false);
             } finally {
                 setIsLoading(false);
@@ -66,22 +60,8 @@ const DiaryPage: React.FC = () => {
         fetchLatestGoal();
     }, []);
 
-    // Calculate today's macros whenever dailyDiet changes
-    useEffect(() => {
-        const todaysDietEntries = dailyDiet.filter(entry => entry.date === formattedToday);
-        
-        const totals = todaysDietEntries.reduce((acc, entry) => {
-            return {
-                protein: acc.protein + (entry.protein || 0),
-                carbs: acc.carbs + (entry.carbs || 0),
-                fat: acc.fat + (entry.fat || 0),
-                calories: acc.calories + (entry.calories || 0)
-            };
-        }, { protein: 0, carbs: 0, fat: 0, calories: 0 });
-        
-        setTodaysMacros(totals);
-    }, [dailyDiet, formattedToday]);
-
+    // Get today's food entries
+    const todaysDietEntries = dailyDiet.filter(entry => entry.date === formattedToday);
 
     return (
         <motion.div 
@@ -90,22 +70,13 @@ const DiaryPage: React.FC = () => {
             initial="hidden"
             animate="visible"
         >
-            {/* Macro Progress Component - Single Conditional */}
+            {/* Macro Progress Component - replaced with SimpleDailyFoodTable */}
             <motion.div 
                 className="p-3 sm:p-4 bg-white rounded-lg shadow-sm"
                 variants={itemVariants}
             >
                 {!isLoading && currentGoal ? (
-                    <MacroProgressDisplay 
-                        currentProtein={todaysMacros.protein}
-                        currentCarbs={todaysMacros.carbs}
-                        currentFat={todaysMacros.fat}
-                        currentCalories={todaysMacros.calories}
-                        targetProtein={Number(currentGoal.protein)}
-                        targetCarbs={Number(currentGoal.carbs)}
-                        targetFat={Number(currentGoal.fat)}
-                        targetCalories={Number(currentGoal.calories)}
-                    />
+                    <SimpleDailyFoodTable entries={todaysDietEntries} />
                 ) : (
                     <div className="flex items-center justify-center h-24 text-gray-500 text-base" aria-busy="true" aria-label="Loading macro progress">
                         Loading macro progress...
