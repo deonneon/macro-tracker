@@ -17,7 +17,6 @@ import { format, subDays, isSameDay } from 'date-fns';
 import { MacroGoal } from '../types/goals';
 import { goalsTable, dailyDietTable } from '../lib/supabase';
 import { motion } from 'framer-motion';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Register Chart.js components
 ChartJS.register(
@@ -29,7 +28,6 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ChartDataLabels
 );
 
 interface CompactMacroChartProps {
