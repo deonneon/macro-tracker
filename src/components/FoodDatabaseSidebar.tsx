@@ -1,12 +1,36 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Food } from '../DietContext';
+import { DietContext } from '../DietContext';
 
 interface FoodDatabaseSidebarProps {
   database: { [key: string]: Food };
 }
 
+// Helper to get today's date in YYYY-MM-DD
+const getTodayDate = (): string => {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const now = new Date();
+  const year = new Intl.DateTimeFormat('en', { year: 'numeric', timeZone }).format(now);
+  const month = new Intl.DateTimeFormat('en', { month: '2-digit', timeZone }).format(now);
+  const day = new Intl.DateTimeFormat('en', { day: '2-digit', timeZone }).format(now);
+  return `${year}-${month}-${day}`;
+};
+
 const FoodDatabaseSidebar: React.FC<FoodDatabaseSidebarProps> = ({ database }) => {
+  const dietContext = useContext(DietContext);
   const foodNames = Object.keys(database);
+
+  if (!dietContext) {
+    throw new Error('FoodDatabaseSidebar must be used within a DietProvider');
+  }
+
+  const { addFoodEntryToDailyDiet } = dietContext;
+
+  const handleFoodClick = async (name: string) => {
+    const food = database[name];
+    if (!food) return;
+    await addFoodEntryToDailyDiet({ ...food, name }, getTodayDate());
+  };
 
   return (
     <aside
@@ -30,9 +54,11 @@ const FoodDatabaseSidebar: React.FC<FoodDatabaseSidebarProps> = ({ database }) =
                   tabIndex={0}
                   aria-label={`Food: ${name}`}
                   role="listitem"
+                  onClick={() => handleFoodClick(name)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
-                      // Optionally handle selection
+                      e.preventDefault();
+                      handleFoodClick(name);
                     }
                   }}
                 >
