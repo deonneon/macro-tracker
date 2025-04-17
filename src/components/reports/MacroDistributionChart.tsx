@@ -76,8 +76,9 @@ const MacroDistributionChart: React.FC<MacroDistributionChartProps> = ({ data })
           label: (context: any) => {
             const label = context.label || '';
             const value = context.raw || 0;
+            const roundedValue = Math.round(value);
             const percentage = Math.round((value / totalCalories) * 100);
-            return `${label}: ${value} cal (${percentage}%)`;
+            return `${label}: ${roundedValue} cal (${percentage}%)`;
           },
         },
       },
