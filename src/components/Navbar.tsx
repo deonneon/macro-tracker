@@ -34,7 +34,7 @@ const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }
             aria-label="Go to Diary"
           >
             <span className="ml-7 mr-3"><FaArrowLeft className="w-4 h-4" /></span>
-            Go to Macro Diary
+            Macro Diary
           </NavLink>
         </div>
 
