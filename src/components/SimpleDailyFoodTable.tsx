@@ -42,7 +42,7 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({ entries }) 
               <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No food entries for this day.</td>
             </tr>
           ) : (
-            entries.map((entry) => (
+            entries.slice().reverse().map((entry) => (
               <tr key={entry.id} className="hover:bg-gray-50 text-sm">
                 <td className="px-4 py-2 font-medium" tabIndex={0} aria-label={entry.name}>{entry.name}</td>
                 <td className="px-4 py-2 text-center" tabIndex={0} aria-label={`Protein: ${entry.protein}g`}>{entry.protein}g</td>
