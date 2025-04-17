@@ -58,7 +58,33 @@ const DiaryPage: React.FC = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <div className="pt-8 pb-6">
-                    <h1 className="text-4xl font-bold">Macro Diary</h1>
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            tabIndex={0}
+                            aria-label="Back to Home"
+                            onClick={() => window.location.href = '/'}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    window.location.href = '/';
+                                }
+                            }}
+                            className="p-2 rounded-full hover:bg-gray-200 focus:bg-gray-200 focus:outline-none transition-colors"
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={3}
+                                stroke="currentColor"
+                                className="w-6 h-6 text-red-800"
+                                aria-hidden="true"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                            </svg>
+                        </button>
+                        <h1 className="text-4xl font-bold">Macro Diary</h1>
+                    </div>
                 </div>
                 <motion.div
                     className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-336px)] overflow-hidden"
