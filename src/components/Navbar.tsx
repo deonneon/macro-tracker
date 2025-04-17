@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes, FaArrowLeft } from 'react-icons/fa';
 
 interface NavbarProps {
   isMobileMenuOpen: boolean;
@@ -29,11 +29,12 @@ const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }
         <div className="flex items-center">
           <NavLink
             to="/diary"
-            className="text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded transition-colors hover:text-indigo-700"
+            className="flex items-center text-xl font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded transition-colors hover:text-indigo-700"
             tabIndex={0}
             aria-label="Go to Diary"
           >
-            Macro Diary
+            <span className="ml-7 mr-3"><FaArrowLeft className="w-4 h-4" /></span>
+            Go to Macro Diary
           </NavLink>
         </div>
 
