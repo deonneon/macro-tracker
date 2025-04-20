@@ -179,10 +179,17 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         label: 'Protein',
         data: periodData.proteinPerDay,
         showLine: false,
-        pointRadius: 5,
+        borderColor: 'rgba(231, 76, 60, 0.9)',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: (ctx: { dataIndex: number }) => {
+          const index = ctx.dataIndex;
+          // Larger points for first and last items
+          return index === 0 || index === periodData.proteinPerDay.length - 1 ? 3 : 2.5;
+        },
         pointBackgroundColor: 'rgba(231, 76, 60, 0.9)',
         pointBorderColor: 'rgba(231, 76, 60, 1)',
-        pointBorderWidth: 2,
+        pointBorderWidth: 1,
       }
     ]
   };
@@ -195,10 +202,17 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         label: 'Calories',
         data: caloriesPerDay,
         showLine: false,
-        pointRadius: 5,
+        borderColor: 'rgba(52, 152, 219, 0.9)',
+        borderWidth: 2,
+        tension: 0.3,
+        pointRadius: (ctx: { dataIndex: number }) => {
+          const index = ctx.dataIndex;
+          // Larger points for first and last items
+          return index === 0 || index === caloriesPerDay.length - 1 ? 3 : 2.5;
+        },
         pointBackgroundColor: 'rgba(52, 152, 219, 0.9)',
         pointBorderColor: 'rgba(52, 152, 219, 1)',
-        pointBorderWidth: 2,
+        pointBorderWidth: 1,
       }
     ]
   };
@@ -207,10 +221,27 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
   const baseOptions: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        left: 0,
+        right: 0,
+        top: 4,
+        bottom: 2
+      }
+    },
     scales: {
       x: {
         stacked: false,
-        grid: { display: false }
+        grid: { display: false },
+        ticks: {
+          maxRotation: 0,
+          font: {
+            size: 10,
+            family: "'Roboto', sans-serif"
+          },
+          autoSkip: true,
+          maxTicksLimit: 7
+        }
       },
       y: {
         stacked: false,
@@ -281,7 +312,7 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
   };
   
   return (
-    <div className="w-full">
+    <div className="w-full overflow-hidden">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-medium text-gray-700">Last 7 Days Macros</h3>
         <div className="flex items-center gap-2">
@@ -306,14 +337,14 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
           </div>
         </div>
       ) : (
-        <div className="flex gap-8 items-stretch" style={{ height: `${height}px` }}>
+        <div className="flex gap-2 sm:gap-4 md:gap-8 items-stretch" style={{ height: `${height}px` }}>
           <div
-            className="w-1/2 bg-white rounded-lg shadow p-4 flex flex-col justify-between"
+            className="w-1/2 bg-white rounded-lg shadow p-1 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden"
             aria-label="Protein chart card"
             tabIndex={0}
           >
             <motion.div
-              className="flex-1 flex items-end"
+              className="flex-1 flex items-end w-full"
               variants={chartVariants}
               initial="hidden"
               animate="visible"
@@ -322,12 +353,12 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
             </motion.div>
           </div>
           <div
-            className="w-1/2 bg-white rounded-lg shadow p-4 flex flex-col justify-between"
+            className="w-1/2 bg-white rounded-lg shadow p-1 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden"
             aria-label="Calories chart card"
             tabIndex={0}
           >
             <motion.div
-              className="flex-1 flex items-end"
+              className="flex-1 flex items-end w-full"
               variants={chartVariants}
               initial="hidden"
               animate="visible"

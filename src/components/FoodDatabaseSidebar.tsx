@@ -34,7 +34,7 @@ const FoodDatabaseSidebar: React.FC<FoodDatabaseSidebarProps> = ({ database }) =
 
   return (
     <aside
-      className="h-full bg-white p-2 flex flex-col"
+      className="h-full bg-white p-2 flex flex-col w-full"
       aria-label="Food Database Sidebar"
       tabIndex={0}
     >

@@ -106,7 +106,7 @@ const DiaryPage: React.FC = () => {
                     </div>
                 </div>
                 <motion.div
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-336px)] overflow-hidden"
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100vh-340px)] overflow-hidden"
                     variants={itemVariants}
                 >
                     {!isLoading && currentGoal ? (
@@ -120,10 +120,12 @@ const DiaryPage: React.FC = () => {
                     )}
                 </motion.div>
                 <motion.div
-                    className="mt-4"
+                    className="mt-4 overflow-hidden"
                     variants={itemVariants}
                 >
-                    <CompactMacroChart height={180} />
+                    <div className="w-full px-1">
+                        <CompactMacroChart height={180} />
+                    </div>
                 </motion.div>
                 {!isLoading && !currentGoal && (
                     <motion.div
@@ -140,7 +142,7 @@ const DiaryPage: React.FC = () => {
                 )}
             </div>
             {/* Sidebar for desktop */}
-            <div className="hidden md:flex w-60 lg:w-72 flex-shrink-0 border-l border-gray-200 bg-gray-50 h-full">
+            <div className="hidden md:flex w-60 lg:w-72 flex-shrink-0 border-l border-gray-200 h-full">
                 <FoodDatabaseSidebar database={database} />
             </div>
             {/* Mobile Drawer Button */}
