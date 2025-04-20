@@ -154,9 +154,9 @@ const DiaryPage: React.FC = () => {
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(true);
                 }}
-                className="fixed bottom-4 right-4 z-40 md:hidden bg-blue-600 text-white rounded-full shadow-lg px-5 py-3 font-semibold text-base focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+                className="fixed top-13 right-4 z-40 md:hidden bg-blue-600 text-white rounded-full shadow-lg px-4 py-2 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
             >
-                Open Food Database
+                Quick Add
             </button>
             {/* Mobile Drawer Sidebar */}
             {isSidebarOpen && (
