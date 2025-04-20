@@ -76,7 +76,7 @@ const DiaryPage: React.FC = () => {
         <div className="flex h-[100vh]">
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
-                <div className="pt-8 pb-6">
+                <div className="pt-2 pb-2 sm:pt-8 sm:pb-6">
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
@@ -102,7 +102,7 @@ const DiaryPage: React.FC = () => {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                             </svg>
                         </button>
-                        <h1 className="text-4xl font-bold">Macro Diary</h1>
+                        <h1 className="text-3xl sm:text-4xl font-bold">Macro Diary</h1>
                     </div>
                 </div>
                 <motion.div
@@ -154,7 +154,7 @@ const DiaryPage: React.FC = () => {
                 onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(true);
                 }}
-                className="fixed top-13 right-4 z-40 md:hidden bg-blue-600 text-white rounded-full shadow-lg px-4 py-2 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+                className="fixed top-7 sm:top-13 right-4 z-40 md:hidden bg-blue-600 text-white rounded-full shadow-lg px-4 py-2 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
             >
                 Quick Add
             </button>

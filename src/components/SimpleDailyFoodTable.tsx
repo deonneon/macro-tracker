@@ -92,12 +92,12 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({ entries }) 
       <table className="min-w-full bg-white rounded-lg shadow" aria-label="Daily Food Log Table">
         <thead>
           <tr className="bg-gray-50 text-xs font-medium text-gray-700 uppercase tracking-wider">
-            <th className="px-4 py-3 text-left" tabIndex={0} aria-label="Food">Food</th>
-            <th className="px-4 py-3 text-center" tabIndex={0} aria-label="Protein (g)">Protein (g)</th>
-            <th className="px-4 py-3 text-center" tabIndex={0} aria-label="Carbs (g)">Carbs (g)</th>
-            <th className="px-4 py-3 text-center" tabIndex={0} aria-label="Fat (g)">Fat (g)</th>
-            <th className="px-4 py-3 text-center" tabIndex={0} aria-label="Calories">Calories</th>
-            <th className="px-4 py-3 text-center" aria-label="Delete"></th>
+            <th className="px-1 sm:px-4 py-3 text-left" tabIndex={0} aria-label="Food">Food</th>
+            <th className="px-1 sm:px-4 py-3 text-center" tabIndex={0} aria-label="Protein (g)">Protein</th>
+            <th className="px-1 sm:px-4 py-3 text-center" tabIndex={0} aria-label="Carbs (g)">Carbs</th>
+            <th className="px-1 sm:px-4 py-3 text-center" tabIndex={0} aria-label="Fat (g)">Fat</th>
+            <th className="px-1 sm:px-4 py-3 text-center" tabIndex={0} aria-label="Calories">Calories</th>
+            <th className="px-1 sm:px-4 py-3 text-center" aria-label="Delete"></th>
           </tr>
         </thead>
         <tbody>
@@ -109,19 +109,19 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({ entries }) 
             entries.slice().reverse().map((entry, idx) => (
               <tr
                 key={entry.id}
-                className="group hover:bg-blue-50 cursor-pointer text-sm focus:bg-blue-100 outline-none transition-colors"
+                className="group hover:bg-blue-50 cursor-pointer text-xs sm:text-sm focus:bg-blue-100 outline-none transition-colors"
                 tabIndex={0}
                 aria-label={`Add ${entry.name} to today`}
                 onClick={() => handleAddFood(entry)}
                 onKeyDown={(e) => handleRowKeyDown(e, entry)}
                 role="button"
               >
-                <td className="px-4 py-2 font-medium">{entry.name}</td>
-                <td className="px-4 py-2 text-center">{entry.protein}g</td>
-                <td className="px-4 py-2 text-center">{entry.carbs || 0}g</td>
-                <td className="px-4 py-2 text-center">{entry.fat || 0}g</td>
-                <td className="px-4 py-2 text-center">{entry.calories}</td>
-                <td className="px-2 py-2 text-center">
+                <td className="px-1 sm:px-4 py-2 font-medium">{entry.name}</td>
+                <td className="px-1 sm:px-4 py-2 text-center">{entry.protein}g</td>
+                <td className="px-1 sm:px-4 py-2 text-center">{entry.carbs || 0}g</td>
+                <td className="px-1 sm:px-4 py-2 text-center">{entry.fat || 0}g</td>
+                <td className="px-1 sm:px-4 py-2 text-center">{entry.calories}</td>
+                <td className="px-1 sm:px-4 py-2 text-center">
                   <span
                     className="invisible group-hover:visible group-focus-within:visible text-red-500 cursor-pointer"
                     tabIndex={0}
@@ -144,13 +144,13 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({ entries }) 
           )}
         </tbody>
         <tfoot>
-          <tr className="bg-blue-50 font-semibold text-sm">
-            <td className="px-4 py-2">Daily Total</td>
-            <td className="px-4 py-2 text-center">{dailyTotals.protein.toFixed(1)}g</td>
-            <td className="px-4 py-2 text-center">{dailyTotals.carbs.toFixed(1)}g</td>
-            <td className="px-4 py-2 text-center">{dailyTotals.fat.toFixed(1)}g</td>
-            <td className="px-4 py-2 text-center">{dailyTotals.calories.toFixed(0)}</td>
-            <td className="px-4 py-2"></td>
+          <tr className="bg-blue-50 font-semibold text-xs sm:text-sm">
+            <td className="px-1 sm:px-4 py-2">Daily Total</td>
+            <td className="px-1 sm:px-4 py-2 text-center">{dailyTotals.protein.toFixed(1)}g</td>
+            <td className="px-1 sm:px-4 py-2 text-center">{dailyTotals.carbs.toFixed(1)}g</td>
+            <td className="px-1 sm:px-4 py-2 text-center">{dailyTotals.fat.toFixed(1)}g</td>
+            <td className="px-1 sm:px-4 py-2 text-center">{dailyTotals.calories.toFixed(0)}</td>
+            <td className="px-1 sm:px-4 py-2"></td>
           </tr>
         </tfoot>
       </table>
