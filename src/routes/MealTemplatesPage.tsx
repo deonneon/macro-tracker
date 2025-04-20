@@ -240,10 +240,10 @@ const MealTemplatesPage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className="container mx-auto sm:px-4 sm:py-6">
+      <div className="bg-white rounded-lg sm:shadow-md sm:p-6 mb-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Meal Templates</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Meal Templates</h1>
           <button
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center"
             onClick={handleOpenCreateModal}

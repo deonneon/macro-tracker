@@ -8,7 +8,7 @@ const FoodEntryPage: React.FC = () => {
   const [activeLogTab, setActiveLogTab] = useState<'entry' | 'view'>('entry');
 
   return (
-    <div className="mx-auto px-4 md:px-20 py-8 flex flex-col items-center">
+    <div className="mx-auto sm:px-4 md:px-20 sm:py-8 flex flex-col items-center">
       <div className="w-full max-w-4xl mb-6">
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex">

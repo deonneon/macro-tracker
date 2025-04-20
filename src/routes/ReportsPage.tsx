@@ -120,9 +120,9 @@ const ReportsPage: React.FC = () => {
   };
   
   return (
-    <div className="mx-auto px-4 py-6 max-w-7xl">
+    <div className="mx-auto sm:px-4 sm:py-6 max-w-7xl">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Nutrition Reports & Analytics</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">Nutrition Reports & Analytics</h1>
         <button
           className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           onClick={handleOpenExportModal}

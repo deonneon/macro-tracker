@@ -59,6 +59,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
       fatPerDay: number[];
     }
   }>({});
+  const [isMobile, setIsMobile] = useState<boolean>(false);
   
   if (!dietContext) {
     throw new Error('WeeklyMacroChart must be used within a DietProvider');
@@ -275,6 +276,16 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
     datasets: getVisibleDatasets()
   };
   
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // Tailwind 'sm' breakpoint
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   // Chart options
   const options: ChartOptions<'bar'> = {
     responsive: true,
@@ -283,7 +294,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
       x: {
         stacked: false,
         title: {
-          display: true,
+          display: !isMobile,
           text: timePeriod === 'week' ? 'Day of Week' : 'Day of Month'
         },
         grid: {
@@ -293,7 +304,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
       y: {
         stacked: false,
         title: {
-          display: true,
+          display: !isMobile,
           text: 'Macros (g)'
         },
         grid: {
@@ -318,6 +329,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
         }
       },
       legend: {
+        display: false,
         position: 'bottom',
         labels: {
           usePointStyle: true,
@@ -532,35 +544,7 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
         </motion.div>
       </motion.div>
       
-      <motion.div 
-        className="flex flex-wrap gap-2 mb-4" 
-        variants={itemVariants}
-      >
-        <motion.button
-          className={`px-3 py-1 rounded-full text-xs border transition-colors ${showProtein ? 'bg-red-100 border-red-500 text-red-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
-          onClick={() => setShowProtein(!showProtein)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Protein
-        </motion.button>
-        <motion.button
-          className={`px-3 py-1 rounded-full text-xs border transition-colors ${showCarbs ? 'bg-green-100 border-green-500 text-green-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
-          onClick={() => setShowCarbs(!showCarbs)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Carbs
-        </motion.button>
-        <motion.button
-          className={`px-3 py-1 rounded-full text-xs border transition-colors ${showFat ? 'bg-yellow-100 border-yellow-500 text-yellow-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
-          onClick={() => setShowFat(!showFat)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Fat
-        </motion.button>
-      </motion.div>
+      
       
       <AnimatePresence mode="wait">
         {isLoading ? (
@@ -596,6 +580,36 @@ const WeeklyMacroChart: React.FC<WeeklyMacroChartProps> = ({ height = 300 }) => 
           </motion.div>
         )}
       </AnimatePresence>
+
+      <motion.div 
+        className="flex flex-wrap gap-2 my-4 justify-center" 
+        variants={itemVariants}
+      >
+        <motion.button
+          className={`px-4 py-2 rounded-full text-xs border transition-colors ${showProtein ? 'bg-red-100 border-red-500 text-red-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
+          onClick={() => setShowProtein(!showProtein)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Protein
+        </motion.button>
+        <motion.button
+          className={`px-4 py-2 rounded-full text-xs border transition-colors ${showCarbs ? 'bg-green-100 border-green-500 text-green-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
+          onClick={() => setShowCarbs(!showCarbs)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Carbs
+        </motion.button>
+        <motion.button
+          className={`px-4 py-2 rounded-full text-xs border transition-colors ${showFat ? 'bg-yellow-100 border-yellow-500 text-yellow-700' : 'bg-gray-100 border-gray-300 text-gray-600'}`}
+          onClick={() => setShowFat(!showFat)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Fat
+        </motion.button>
+      </motion.div>
     </motion.div>
   );
 };

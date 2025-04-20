@@ -85,7 +85,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <motion.div 
-            className="flex flex-col gap-4 px-2 sm:px-4 md:px-6 lg:px-8 py-4 w-full max-w-7xl mx-auto"
+            className="flex flex-col gap-4 sm:px-4 md:px-6 lg:px-8 w-full max-w-7xl mx-auto"
             variants={containerVariants}
             initial="hidden"
             animate="visible"

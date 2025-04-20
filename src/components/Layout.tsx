@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </p>
               
               <div className="md:max-w-xs">
-                <CacheStatus />
+                { import.meta.env.DEV && <CacheStatus />}
               </div>
             </div>
           </div>
