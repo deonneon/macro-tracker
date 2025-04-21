@@ -136,7 +136,7 @@ const DatabasePage: React.FC = () => {
     };
 
     return (
-        <div className="container w-full mx-auto sm:px-4 sm:py-8">
+        <div className="w-full mx-auto sm:px-4 sm:py-8">
             <h2 className="mt-0 mb-4 text-xl font-semibold">Food Database</h2>
             
             {/* Search and Filter Controls */}

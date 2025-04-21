@@ -115,7 +115,7 @@ const DiaryPage: React.FC = () => {
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') setIsQuickFoodModalOpen(true);
                             }}
-                            className="bg-red-700 text-white rounded-full shadow-lg px-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all flex items-center justify-center border-none outline-none"
+                            className="bg-red-700 text-white rounded-full shadow-lg px-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all flex items-center justify-center border-none outline-none cursor-pointer"
                         >
                             Add Food
                         </button>
