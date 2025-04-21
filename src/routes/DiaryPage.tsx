@@ -78,7 +78,7 @@ const DiaryPage: React.FC = () => {
         <div className="flex h-dvh max-h-dvh overflow-hidden">
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
-                <div className="pt-2 pb-2 sm:pt-8 sm:pb-6">
+                <div className="pt-2 pb-2 sm:pt-8 sm:pb-6 flex flex-row justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             type="button"
@@ -105,6 +105,20 @@ const DiaryPage: React.FC = () => {
                             </svg>
                         </button>
                         <h1 className="text-3xl sm:text-4xl font-bold">Macro Diary</h1>
+                    </div>
+                    <div className="hidden md:block flex gap-2">
+                        <button
+                            type="button"
+                            tabIndex={0}
+                            aria-label="Add Food Quickly"
+                            onClick={() => setIsQuickFoodModalOpen(true)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') setIsQuickFoodModalOpen(true);
+                            }}
+                            className="bg-red-700 text-white rounded-full shadow-lg px-4 py-1.5 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all flex items-center justify-center border-none outline-none"
+                        >
+                            Add Food
+                        </button>
                     </div>
                 </div>
                 <motion.div
@@ -149,54 +163,54 @@ const DiaryPage: React.FC = () => {
             </div>
             {/* Mobile Drawer Button */}
             <div className="fixed top-7 sm:top-13 right-4 z-40 md:hidden flex gap-2">
-              <button
-                type="button"
-                tabIndex={0}
-                aria-label="Add Food Quickly"
-                onClick={() => setIsQuickFoodModalOpen(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') setIsQuickFoodModalOpen(true);
-                }}
-                className="bg-red-700 text-white rounded-full shadow-lg p-1.5 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all flex items-center justify-center border-none outline-none"
-              >
-                {/* Plus Icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                  aria-hidden="true"
+                <button
+                    type="button"
+                    tabIndex={0}
+                    aria-label="Add Food Quickly"
+                    onClick={() => setIsQuickFoodModalOpen(true)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') setIsQuickFoodModalOpen(true);
+                    }}
+                    className="bg-red-700 text-white rounded-full shadow-lg p-1.5 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all flex items-center justify-center border-none outline-none"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m-4-4h8" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                tabIndex={0}
-                aria-label="Open Food Database"
-                onClick={() => setIsSidebarOpen(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(true);
-                }}
-                className="bg-blue-700 text-white rounded-full shadow-lg p-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all flex items-center justify-center"
-              >
-                {/* Hamburger Icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2.5}
-                  stroke="currentColor"
-                  className="w-6 h-6"
-                  aria-hidden="true"
+                    {/* Plus Icon */}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2.5}
+                        stroke="currentColor"
+                        className="w-6 h-6"
+                        aria-hidden="true"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m-4-4h8" />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    tabIndex={0}
+                    aria-label="Open Food Database"
+                    onClick={() => setIsSidebarOpen(true)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(true);
+                    }}
+                    className="bg-blue-700 text-white rounded-full shadow-lg p-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all flex items-center justify-center"
                 >
-                  <line x1="5" y1="7" x2="19" y2="7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                  <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                  <line x1="5" y1="17" x2="19" y2="17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              </button>
+                    {/* Hamburger Icon */}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2.5}
+                        stroke="currentColor"
+                        className="w-6 h-6"
+                        aria-hidden="true"
+                    >
+                        <line x1="5" y1="7" x2="19" y2="7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                        <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                        <line x1="5" y1="17" x2="19" y2="17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                </button>
             </div>
             {/* Mobile Drawer Sidebar */}
             {isSidebarOpen && (
@@ -224,9 +238,9 @@ const DiaryPage: React.FC = () => {
                 </>
             )}
             {/* QuickFoodModal */}
-            <QuickFoodModal 
-              isOpen={isQuickFoodModalOpen} 
-              onClose={() => setIsQuickFoodModalOpen(false)} 
+            <QuickFoodModal
+                isOpen={isQuickFoodModalOpen}
+                onClose={() => setIsQuickFoodModalOpen(false)}
             />
         </div>
     );
