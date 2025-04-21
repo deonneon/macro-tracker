@@ -75,7 +75,7 @@ const DiaryPage: React.FC = () => {
     }, [isSidebarOpen]);
 
     return (
-        <div className="flex h-[100vh]">
+        <div className="flex" style={{ height: '100dvh' }}>
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <div className="pt-2 pb-2 sm:pt-8 sm:pb-6">
@@ -203,7 +203,7 @@ const DiaryPage: React.FC = () => {
                 <>
                     {/* Overlay */}
                     <div
-                        className="fixed inset-0 bg-[rgba(0,0,0,0.9)] z-40 md:hidden backdrop-blur-[2px] transition-opacity"
+                        className="fixed inset-0 bg-[rgba(0,0,0,0.7)] z-40 md:hidden backdrop-blur-[2px] transition-opacity"
                         aria-label="Sidebar overlay"
                         tabIndex={-1}
                         onClick={() => setIsSidebarOpen(false)}
@@ -215,7 +215,7 @@ const DiaryPage: React.FC = () => {
                         role="dialog"
                         aria-modal="true"
                         aria-label="Food Database Drawer"
-                        className="fixed top-0 right-0 h-full w-4/5 max-w-xs bg-white shadow-xl z-50 md:hidden flex flex-col outline-none transition-transform duration-300 ease-in-out transform translate-x-0"
+                        className="fixed top-0 right-0 h-full w-3/5 max-w-xs bg-white shadow-xl z-50 md:hidden flex flex-col outline-none transition-transform duration-300 ease-in-out transform translate-x-0"
                     >
                         <div className="flex-1 overflow-y-auto">
                             <FoodDatabaseSidebar database={database} />
