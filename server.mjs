@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
+    origin: ['http://localhost:5173'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
     optionsSuccessStatus: 204,
@@ -40,25 +40,24 @@ app.post('/api/query-openai', async (req, res) => {
 
     try {
         const response = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4o-mini",
             messages: [
                 {
                     role: "system",
-                    content: "As a nutritionist, provide protein and calorie content of foods.",
+                    content: "As a nutritionist, provide protein, calorie, carb, fat, and measurement content of foods. Return only a JSON object with the following schema: { food_name: string, protein: float, calories: float, carb: float, fat: float, measurementSize: float, measurementUnit: string }. All values must be floats. Do not include any explanation or extra text.",
                 },
                 {
                     role: "user",
-                    content: `${aiInputText}: {food_name, protein (g, float), calories, measurement (weight/volume)} as JSON.`,
+                    content: `${aiInputText}`,
                 },
             ],
-            temperature: 1,
-            max_tokens: 256,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-        });
-
-        res.json(response.choices[0].message.content);
+            response_format: { type: "json_object" },
+        }); 
+        console.log(response.choices[0].message.content);
+        // Parse the JSON string into an object
+        const parsed = JSON.parse(response.choices[0].message.content);
+       
+        res.json(parsed); // Send the parsed object
     } catch (error) {
         console.error("Error with OpenAI:", error);
         res.status(500).send("Internal Server Error");

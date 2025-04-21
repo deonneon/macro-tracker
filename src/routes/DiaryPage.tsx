@@ -7,12 +7,14 @@ import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 import SimpleDailyFoodTable from '../components/SimpleDailyFoodTable';
 import FoodDatabaseSidebar from '../components/FoodDatabaseSidebar';
+import QuickFoodModal from '../components/QuickFoodModal';
 
 const DiaryPage: React.FC = () => {
     const dietContext = useContext(DietContext);
     const [currentGoal, setCurrentGoal] = useState<MacroGoal | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isQuickFoodModalOpen, setIsQuickFoodModalOpen] = useState(false);
     const drawerRef = useRef<HTMLDivElement>(null);
 
     if (!dietContext) {
@@ -146,18 +148,56 @@ const DiaryPage: React.FC = () => {
                 <FoodDatabaseSidebar database={database} />
             </div>
             {/* Mobile Drawer Button */}
-            <button
+            <div className="fixed top-7 sm:top-13 right-4 z-40 md:hidden flex gap-2">
+              <button
+                type="button"
+                tabIndex={0}
+                aria-label="Add Food Quickly"
+                onClick={() => setIsQuickFoodModalOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') setIsQuickFoodModalOpen(true);
+                }}
+                className="bg-red-700 text-white rounded-full shadow-lg p-1.5 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all flex items-center justify-center border-none outline-none"
+              >
+                {/* Plus Icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8m-4-4h8" />
+                </svg>
+              </button>
+              <button
                 type="button"
                 tabIndex={0}
                 aria-label="Open Food Database"
                 onClick={() => setIsSidebarOpen(true)}
                 onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(true);
+                  if (e.key === 'Enter' || e.key === ' ') setIsSidebarOpen(true);
                 }}
-                className="fixed top-7 sm:top-13 right-4 z-40 md:hidden bg-blue-600 text-white rounded-full shadow-lg px-4 py-2 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all"
-            >
-                Quick Add
-            </button>
+                className="bg-blue-700 text-white rounded-full shadow-lg p-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all flex items-center justify-center"
+              >
+                {/* Hamburger Icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                  aria-hidden="true"
+                >
+                  <line x1="5" y1="7" x2="19" y2="7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                  <line x1="5" y1="17" x2="19" y2="17" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
             {/* Mobile Drawer Sidebar */}
             {isSidebarOpen && (
                 <>
@@ -183,6 +223,11 @@ const DiaryPage: React.FC = () => {
                     </div>
                 </>
             )}
+            {/* QuickFoodModal */}
+            <QuickFoodModal 
+              isOpen={isQuickFoodModalOpen} 
+              onClose={() => setIsQuickFoodModalOpen(false)} 
+            />
         </div>
     );
 };

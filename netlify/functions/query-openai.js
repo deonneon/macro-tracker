@@ -1,4 +1,3 @@
-
 const OpenAI = require("openai");
 
 const openai = new OpenAI({
@@ -14,29 +13,27 @@ exports.handler = async function (event, context) {
 
     try {
         const response = await openai.chat.completions.create({
-            model: "gpt-4o",
+            model: "gpt-4o-mini",
             messages: [
                 {
                     role: "system",
-                    content: "As a nutritionist, provide protein and calorie content of foods.",
+                    content: "As a nutritionist, provide protein, calorie, carb, fat, and measurement content of foods. Return only a JSON object with the following schema: { food_name: string, protein: float, calories: float, carb: float, fat: float, measurementSize: float, measurementUnit: string }. All values must be floats. Do not include any explanation or extra text.",
                 },
                 {
                     role: "user",
-                    content: `${aiInputText}: {food_name, protein (g, float), calories, measurement (weight/volume)} as JSON.`,
+                    content: `${aiInputText}`,
                 },
             ],
-            temperature: 1,
-            max_tokens: 256,
-            top_p: 1,
-            frequency_penalty: 0,
-            presence_penalty: 0,
+            response_format: { type: "json_object" },
         });
-
+        // Parse the JSON string into an object
+        const parsed = JSON.parse(response.choices[0].message.content);
         return {
             statusCode: 200,
-            body: JSON.stringify(response.choices[0].message.content),
+            body: JSON.stringify(parsed),
         };
     } catch (error) {
+        console.error("Error with OpenAI:", error);
         return { statusCode: 500, body: "Internal Server Error" };
     }
 };
