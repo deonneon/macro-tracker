@@ -14,13 +14,6 @@ const isValidNumberOrBlank = (value: string): boolean => {
     return /^(\d+(\.\d+)?)?$/.test(value);
 };
 
-interface AIData {
-    food_name: string;
-    protein: string;
-    calories: string;
-    measurement: string;
-}
-
 interface ValidationErrors {
     protein?: string;
     carbs?: string;
@@ -50,7 +43,6 @@ const FoodInput: React.FC = () => {
     const [showCancel, setShowCancel] = useState<boolean>(false);
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
     const inputRef = useRef<HTMLInputElement>(null);
-    const [hideAIResponse, setHideAIResponse] = useState<boolean>(false);
     const [aiDataReturned, setAIDataReturned] = useState<boolean>(false);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -198,7 +190,6 @@ const FoodInput: React.FC = () => {
             
             // Reset form
             handleCancel();
-            setHideAIResponse(true);
         } catch (error) {
             console.error('Error adding food to database:', error);
             // Show error message to user
@@ -206,17 +197,6 @@ const FoodInput: React.FC = () => {
         }
     };
 
-    const handleAIData = (data: AIData | null): void => {
-        if (data) {
-            setInput(data.food_name.toLowerCase() || '');
-            setProteinInput(data.protein || '');
-            setCalorieInput(data.calories || '');
-            setUnitInput(data.measurement || '');
-            setShowForm(true);
-            setHideAIResponse(false);
-            setAIDataReturned(true);
-        }
-    };
 
     const getUnitOptions = (): string[] => {
         return ['serving', 'g', 'oz', 'cup', 'tbsp', 'tsp', 'slice', 'piece', 'ml'];
