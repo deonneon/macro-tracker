@@ -160,7 +160,7 @@ const MacroProgressDisplay: React.FC<MacroProgressDisplayProps> = ({
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.8 }}
             >
-              {Math.round(currentCalories)} / {targetCalories} cal 
+              {Math.round(currentCalories).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} / {targetCalories.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} cal 
               <span className="hidden xs:inline"> ({caloriesPercentage}%)</span>
             </motion.span>
           </div>

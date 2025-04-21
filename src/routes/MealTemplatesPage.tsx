@@ -358,7 +358,7 @@ const MealTemplatesPage: React.FC = () => {
                         <div>Fat</div>
                       </div>
                       <div className="grid grid-cols-4 text-sm font-medium">
-                        <div>{totals.calories.toFixed(0)}</div>
+                        <div>{totals.calories.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</div>
                         <div>{totals.protein.toFixed(1)}g</div>
                         <div>{totals.carbs.toFixed(1)}g</div>
                         <div>{totals.fat.toFixed(1)}g</div>
@@ -643,7 +643,7 @@ const MealTemplatesPage: React.FC = () => {
                       <>
                         <div className="bg-white p-3 rounded-md shadow-sm text-center">
                           <div className="text-gray-500 text-sm">Calories</div>
-                          <div className="text-2xl font-bold text-gray-800">{totals.calories.toFixed(0)}</div>
+                          <div className="text-2xl font-bold text-gray-800">{totals.calories.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</div>
                         </div>
                         <div className="bg-white p-3 rounded-md shadow-sm text-center">
                           <div className="text-gray-500 text-sm">Protein</div>

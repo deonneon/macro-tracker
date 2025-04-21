@@ -84,7 +84,7 @@ const MacroDistributionChart: React.FC<MacroDistributionChartProps> = ({ data })
       },
       title: {
         display: true,
-        text: `Calorie Distribution (${Math.round(totalCalories)} cal)`,
+        text: `Calorie Distribution (${Math.round(totalCalories).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} cal)`,
         font: {
           size: 16,
           weight: 'bold' as const,

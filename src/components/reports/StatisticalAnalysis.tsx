@@ -203,16 +203,16 @@ const StatisticalAnalysis: React.FC<StatisticalAnalysisProps> = ({
             <tr>
               <td className="p-2 font-medium">Calories</td>
               <td className="p-2 text-center">
-                {Math.round(statistics.calories.avg)}
+                {Math.round(statistics.calories.avg).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 {macroGoal && (
                   <div className="text-xs text-gray-500">
                     {calculateGoalPercentage(statistics.calories.avg, macroGoal.calories)}% of goal
                   </div>
                 )}
               </td>
-              <td className="p-2 text-center">{Math.round(statistics.calories.min)}</td>
-              <td className="p-2 text-center">{Math.round(statistics.calories.max)}</td>
-              {macroGoal && <td className="p-2 text-center">{macroGoal.calories}</td>}
+              <td className="p-2 text-center">{Math.round(statistics.calories.min).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+              <td className="p-2 text-center">{Math.round(statistics.calories.max).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+              {macroGoal && <td className="p-2 text-center">{macroGoal.calories.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>}
             </tr>
           </tbody>
         </table>

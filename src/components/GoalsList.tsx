@@ -124,7 +124,7 @@ const GoalsList: React.FC<GoalsListProps> = ({
                   {goal.fat}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {goal.calories}
+                  {goal.calories.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button

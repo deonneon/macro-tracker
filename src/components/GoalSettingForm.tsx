@@ -134,7 +134,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
             name="date"
             value={formData.date}
             onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             required
           />
           {errors.date && (
@@ -152,7 +152,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
             name="protein"
             value={formData.protein}
             onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="mt-1 block w-full px-3 py-2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             min="0"
             max="1000"
             required
@@ -172,7 +172,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
             name="carbs"
             value={formData.carbs}
             onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             min="0"
             max="1000"
             required
@@ -192,7 +192,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
             name="fats"
             value={formData.fats}
             onChange={handleInputChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md px-3 py-2 border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
             min="0"
             max="1000"
             required
@@ -207,7 +207,7 @@ const GoalSettingForm: React.FC<GoalSettingFormProps> = ({
             Total Calories
           </label>
           <div className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-700 sm:text-sm">
-            {calories.toFixed(0)} kcal
+            {calories.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} kcal
           </div>
         </div>
       </div>
