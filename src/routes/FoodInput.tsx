@@ -1,6 +1,5 @@
 import React, { useState, useContext, useRef } from 'react';
 import { DietContext } from '../DietContext';
-import AIQueryComponent from '../AIQueryComponent';
 
 function getTodayDate(): string {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -277,10 +276,6 @@ const FoodInput: React.FC = () => {
                         Add Food
                     </button>
                 )}
-
-                <div className="ml-2">
-                    <AIQueryComponent onDataReceived={handleAIData} hideResponse={hideAIResponse} />
-                </div>
             </div>
 
             {showForm && (
