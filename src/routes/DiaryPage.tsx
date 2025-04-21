@@ -75,7 +75,7 @@ const DiaryPage: React.FC = () => {
     }, [isSidebarOpen]);
 
     return (
-        <div className="flex hsvh">
+        <div className="flex h-svh">
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <div className="pt-2 pb-2 sm:pt-8 sm:pb-6">
