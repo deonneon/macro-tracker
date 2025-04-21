@@ -108,7 +108,7 @@ const DiaryPage: React.FC = () => {
                     </div>
                 </div>
                 <motion.div
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100svh-340px)] overflow-hidden"
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(svh-340px)] overflow-hidden"
                     variants={itemVariants}
                 >
                     {!isLoading && currentGoal ? (
