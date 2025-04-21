@@ -75,7 +75,7 @@ const DiaryPage: React.FC = () => {
     }, [isSidebarOpen]);
 
     return (
-        <div className="flex max-h-dvh overflow-hidden">
+        <div className="flex h-dvh max-h-dvh overflow-hidden">
             {/* Main Content */}
             <div className="flex-1 flex flex-col px-2 sm:px-4 md:px-6 lg:px-8 py-4 min-w-0">
                 <div className="pt-2 pb-2 sm:pt-8 sm:pb-6">
@@ -108,7 +108,7 @@ const DiaryPage: React.FC = () => {
                     </div>
                 </div>
                 <motion.div
-                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(dvh-340px)] overflow-hidden"
+                    className="p-3 sm:p-4 bg-white rounded-lg shadow-sm max-h-[calc(100dvh-340px)] overflow-hidden"
                     variants={itemVariants}
                 >
                     {!isLoading && currentGoal ? (
