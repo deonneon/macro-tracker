@@ -111,7 +111,7 @@ const DiaryPage: React.FC = () => {
             </button>
             <h1 className="text-3xl sm:text-4xl font-bold">Macro Diary</h1>
           </div>
-          <div className="hidden md:block flex gap-2">
+          <div className="hidden md:block gap-2">
             <button
               type="button"
               tabIndex={0}
