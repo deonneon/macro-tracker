@@ -8,6 +8,12 @@
 
 MacroTrack Pro helps you take control of your nutrition by providing an intuitive and powerful platform to log your meals, monitor your macros (protein, carbohydrates, and fats), and visualize your progress over time. Whether you're aiming for weight loss, muscle gain, or simply a healthier lifestyle, MacroTrack Pro is designed to support you every step of the way.
 
+## To Do
+
+ - [ ] Add Button to not add food to list
+ - [ ] Make Diary Page Landing Page
+ - [ ] First time user Gets Modal that Shows Diary and Advanced View
+ 
 ## ✨ Key Features
 
 *   **🍎 Effortless Food Logging:** Quickly add food items with detailed macro breakdowns.

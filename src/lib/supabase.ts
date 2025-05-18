@@ -75,6 +75,7 @@ export interface DailyDietWithFood {
   carbs?: number;
   fat?: number;
   calories: number;
+  serving_size: number;
   unit: string;
   food_id: number;
   meal_type?: string;
@@ -402,6 +403,7 @@ export const dailyDietTable = {
           carbs,
           fat,
           calories,
+          serving_size,
           unit
         )
       `);
@@ -417,6 +419,7 @@ export const dailyDietTable = {
       carbs: item.foods.carbs,
       fat: item.foods.fat,
       calories: item.foods.calories,
+      serving_size: item.foods.serving_size || 1,
       unit: item.foods.unit,
       food_id: item.foods.id
     }));
@@ -435,6 +438,7 @@ export const dailyDietTable = {
           carbs,
           fat,
           calories,
+          serving_size,
           unit
         )
       `)
@@ -451,6 +455,7 @@ export const dailyDietTable = {
       carbs: item.foods.carbs,
       fat: item.foods.fat,
       calories: item.foods.calories,
+      serving_size: item.foods.serving_size || 1,
       unit: item.foods.unit,
       food_id: item.foods.id
     }));
@@ -469,6 +474,7 @@ export const dailyDietTable = {
           carbs,
           fat,
           calories,
+          serving_size,
           unit
         )
       `)
@@ -486,6 +492,7 @@ export const dailyDietTable = {
       carbs: item.foods.carbs,
       fat: item.foods.fat,
       calories: item.foods.calories,
+      serving_size: item.foods.serving_size || 1,
       unit: item.foods.unit,
       food_id: item.foods.id
     }));
