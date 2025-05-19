@@ -10,7 +10,6 @@ MacroTrack Pro helps you take control of your nutrition by providing an intuitiv
 
 ## To Do
 
- - [ ] Add Button to not add food to list
  - [ ] Make Diary Page Landing Page
  - [ ] First time user Gets Modal that Shows Diary and Advanced View
  
