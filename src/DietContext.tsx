@@ -117,13 +117,13 @@ export const DietProvider: React.FC<DietProviderProps> = ({ children }) => {
                 carbs: item.carbs || 0,
                 fat: item.fat || 0,
                 calories: item.calories,
-                serving_size: 1,
+                serving_size: database[item.name]?.serving_size || 1,
                 unit: item.unit,
                 food_id: item.food_id
             }));
             setDailyDiet(transformedData);
         }
-    }, [dailyEntries]);
+    }, [dailyEntries, database]);
 
     // Update meal templates when React Query data changes
     useEffect(() => {

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { FaBars, FaTimes, FaArrowLeft } from 'react-icons/fa';
+import { FaBars, FaTimes, FaArrowLeft, FaUser } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
 
 interface NavbarProps {
   isMobileMenuOpen: boolean;
@@ -7,6 +8,8 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
+  const { user } = useAuth();
+  
   const navItems = [
     { path: '/', label: 'Dashboard' },
     { path: '/food-entry', label: 'Food Entry' },
@@ -49,6 +52,20 @@ const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }
               {item.label}
             </NavLink>
           ))}
+          
+          {/* Profile link */}
+          <NavLink
+            to="/profile"
+            className={navLinkClasses}
+            aria-label="User Profile"
+          >
+            <div className="flex items-center">
+              <FaUser className="mr-1" />
+              <span className="hidden lg:inline-block">
+                {user?.email ? user.email.split('@')[0] : 'Profile'}
+              </span>
+            </div>
+          </NavLink>
         </div>
 
         {/* Mobile menu button */}
@@ -83,6 +100,18 @@ const Navbar: React.FC<NavbarProps> = ({ isMobileMenuOpen, setIsMobileMenuOpen }
                 {item.label}
               </NavLink>
             ))}
+            
+            {/* Profile link for mobile */}
+            <NavLink
+              to="/profile"
+              className={navLinkClasses}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <div className="flex items-center">
+                <FaUser className="mr-2" />
+                Profile
+              </div>
+            </NavLink>
           </div>
         </div>
       )}
