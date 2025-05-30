@@ -12,6 +12,7 @@ const LoginForm: React.FC = () => {
   const [isOAuthLoading, setIsOAuthLoading] = useState<OAuthProvider | null>(
     null
   );
+
   const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   const { signIn, signInWithOAuth } = useAuth();
