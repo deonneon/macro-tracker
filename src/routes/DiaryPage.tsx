@@ -133,17 +133,17 @@ const DiaryPage: React.FC = () => {
             className="p-3 sm:p-4 bg-white rounded-lg shadow-sm flex-grow min-h-0 overflow-y-auto"
             variants={itemVariants}
           >
-            {!isLoading && currentGoal ? (
-              <div className="h-full">
-                <SimpleDailyFoodTable entries={todaysDietEntries} />
-              </div>
-            ) : (
+            {isLoading ? (
               <div
                 className="flex items-center justify-center h-24 text-gray-500 text-base"
                 aria-busy="true"
-                aria-label="Loading macro progress"
+                aria-label="Loading diary data"
               >
-                Loading macro progress...
+                Loading diary data...
+              </div>
+            ) : (
+              <div className="h-full">
+                <SimpleDailyFoodTable entries={todaysDietEntries} />
               </div>
             )}
           </motion.div>
