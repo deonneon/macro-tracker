@@ -330,16 +330,17 @@ export const goalsTable = {
     return data;
   },
 
-  async getLatest() {
+  async getLatest(): Promise<MacroGoal | null> {
     const { data, error } = await supabase
       .from("macro_goals")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (error && error.code !== "PGRST116") throw error; // PGRST116 is "no rows returned"
-    return data;
+    if (error) throw error;
+
+    // Return null if no goals exist (for new users)
+    return data && data.length > 0 ? data[0] : null;
   },
 
   async getAll() {
