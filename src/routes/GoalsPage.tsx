@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import GoalSettingForm from '../components/GoalSettingForm';
-import GoalsList from '../components/GoalsList';
-import ConfirmationModal from '../components/ConfirmationModal';
-import { goalsTable } from '../lib/supabase';
-import { MacroGoal } from '../types/goals';
+import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
+import GoalSettingForm from "../components/GoalSettingForm";
+import GoalsList from "../components/GoalsList";
+import ConfirmationModal from "../components/ConfirmationModal";
+import { goalsTable } from "../lib/supabase";
+import { MacroGoal } from "../types/goals";
+import { useAuth } from "../contexts/AuthContext";
 
 const GoalsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,40 +13,46 @@ const GoalsPage: React.FC = () => {
   const [success, setSuccess] = useState<boolean>(false);
   const [currentGoal, setCurrentGoal] = useState<MacroGoal | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
+
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({
-    title: '',
-    message: '',
-    existingGoalId: '',
-    pendingGoalData: {} as any
+    title: "",
+    message: "",
+    existingGoalId: "",
+    pendingGoalData: {} as Omit<MacroGoal, "id" | "created_at">,
   });
 
-  // For a personal app without authentication, we use a placeholder user ID
-  const userId = '00000000-0000-0000-0000-000000000000';
+  // Get the authenticated user
+  const { user } = useAuth();
+  const userId = user?.id;
 
   // Load the latest goal on initial render
   useEffect(() => {
     const fetchLatestGoal = async () => {
+      if (!userId) return; // Don't fetch if no authenticated user
+
       try {
         const data = await goalsTable.getLatest();
         if (data) {
           setCurrentGoal(data);
         }
       } catch (err) {
-        console.error('Error fetching latest goal:', err);
+        console.error("Error fetching latest goal:", err);
       }
     };
 
     fetchLatestGoal();
-  }, []);
+  }, [userId]); // Add userId as dependency
 
-  const saveGoal = async (goalData: any, existingId?: string) => {
+  const saveGoal = async (
+    goalData: Omit<MacroGoal, "id" | "created_at">,
+    existingId?: string
+  ) => {
     try {
-      console.log('Saving goal with data:', goalData);
-      console.log('Existing ID (if updating):', existingId);
-      
+      console.log("Saving goal with data:", goalData);
+      console.log("Existing ID (if updating):", existingId);
+
       let result;
       if (existingId) {
         // Update existing goal
@@ -53,98 +60,123 @@ const GoalsPage: React.FC = () => {
         result = await goalsTable.update(existingId, goalData);
       } else {
         // Create new goal
-        console.log('Creating new goal');
+        console.log("Creating new goal");
         result = await goalsTable.create(goalData);
       }
-      
-      console.log('Goal saved successfully:', result);
+
+      console.log("Goal saved successfully:", result);
       setCurrentGoal(result);
       setSuccess(true);
-      setRefreshTrigger(prev => prev + 1); // Trigger list refresh
-      
+      setRefreshTrigger((prev) => prev + 1); // Trigger list refresh
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(false);
       }, 3000);
-    } catch (err: any) {
-      console.error('Error saving goal:', err);
-      setError(err.message || 'Failed to save goal. Please try again.');
+    } catch (err: unknown) {
+      console.error("Error saving goal:", err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to save goal. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: {
+    protein: number;
+    carbs: number;
+    fats: number;
+    date: string;
+  }) => {
+    // Early return if no authenticated user
+    if (!userId) {
+      setError("You must be logged in to save goals");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setSuccess(false);
-    
+
     try {
-      console.log('Form data submitted:', formData);
-      
+      console.log("Form data submitted:", formData);
+
       // Calculate calories based on macros
-      const calories = (formData.protein * 4) + (formData.carbs * 4) + (formData.fats * 9);
-      
+      const calories =
+        formData.protein * 4 + formData.carbs * 4 + formData.fats * 9;
+
       // Map form fields to database fields (note 'fats' -> 'fat')
-      const goalData = {
+      const goalData: Omit<MacroGoal, "id" | "created_at"> = {
         calories,
         protein: formData.protein,
         carbs: formData.carbs,
         fat: formData.fats, // Map 'fats' to 'fat'
         target_date: formData.date, // Store the target date
-        user_id: userId
+        user_id: userId,
       };
 
-      console.log('Processing goal with target date:', formData.date);
-      
+      console.log("Processing goal with target date:", formData.date);
+
       // Check for existing goals on the same date
       let existingGoalId = currentGoal?.id;
       let needToCheckForExistingGoals = false;
 
       // If we're editing a goal but the date changed, treat it as a new goal for the new date
       if (existingGoalId && currentGoal?.target_date !== formData.date) {
-        console.log('Date changed while editing, treating as new goal for new date');
+        console.log(
+          "Date changed while editing, treating as new goal for new date"
+        );
         needToCheckForExistingGoals = true;
         existingGoalId = undefined;
       }
 
       // If we're not already editing a goal (or we changed the date), check for existing goals on this date
       if (!existingGoalId || needToCheckForExistingGoals) {
-        console.log('Checking for existing goals on date:', formData.date);
+        console.log("Checking for existing goals on date:", formData.date);
         const existingGoals = await goalsTable.getByDate(formData.date, userId);
-        console.log('Existing goals found:', existingGoals);
-        
+        console.log("Existing goals found:", existingGoals);
+
         if (existingGoals && existingGoals.length > 0) {
           // Use the most recent goal for this date
           const existingGoal = existingGoals[0];
-          console.log(`Found existing goal for ${formData.date}:`, existingGoal);
-          
+          console.log(
+            `Found existing goal for ${formData.date}:`,
+            existingGoal
+          );
+
           // Check if we're not trying to update the exact same goal
           if (existingGoal.id !== currentGoal?.id) {
             // Show confirmation modal
             setModalData({
-              title: 'Goal Already Exists',
+              title: "Goal Already Exists",
               message: `A goal already exists for ${formData.date}. Would you like to update it instead of creating a new one?`,
               existingGoalId: existingGoal.id,
-              pendingGoalData: goalData
+              pendingGoalData: goalData,
             });
             setShowModal(true);
             return;
           } else {
-            console.log('Updating the same goal, no confirmation needed');
+            console.log("Updating the same goal, no confirmation needed");
           }
         } else {
-          console.log('No existing goals found for this date, creating new');
+          console.log("No existing goals found for this date, creating new");
         }
       } else {
-        console.log('Updating existing goal with ID:', existingGoalId);
+        console.log("Updating existing goal with ID:", existingGoalId);
       }
-      
+
       // If no existing goal or we're updating the current goal, save directly
       await saveGoal(goalData, existingGoalId);
-    } catch (err: any) {
-      console.error('Error processing goal:', err);
-      setError(err.message || 'Failed to process goal. Please try again.');
+    } catch (err: unknown) {
+      console.error("Error processing goal:", err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to process goal. Please try again.";
+      setError(errorMessage);
       setIsLoading(false);
     }
   };
@@ -166,31 +198,31 @@ const GoalsPage: React.FC = () => {
     if (currentGoal?.id) {
       setCurrentGoal(null); // Clear current goal to create new one
     } else {
-      console.log('Cancelled');
+      console.log("Cancelled");
     }
   };
 
   const handleEditGoal = (goal: MacroGoal) => {
-    console.log('Editing goal:', goal);
+    console.log("Editing goal:", goal);
     setCurrentGoal(goal);
     // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Format the current goal for the form if it exists
-  const formattedCurrentGoal = currentGoal 
+  const formattedCurrentGoal = currentGoal
     ? {
         protein: Number(currentGoal.protein),
         carbs: Number(currentGoal.carbs),
         fats: Number(currentGoal.fat), // Map 'fat' to 'fats' for the form
-        date: currentGoal.target_date || format(new Date(), 'yyyy-MM-dd'), // Provide default date if undefined
-      } 
+        date: currentGoal.target_date || format(new Date(), "yyyy-MM-dd"), // Provide default date if undefined
+      }
     : undefined;
 
   const handleDeleteSuccess = () => {
-    console.log('Goal deleted, refreshing list');
-    setRefreshTrigger(prev => prev + 1);
-    
+    console.log("Goal deleted, refreshing list");
+    setRefreshTrigger((prev) => prev + 1);
+
     // If the deleted goal was the current goal, clear it
     if (currentGoal) {
       setCurrentGoal(null);
@@ -200,19 +232,17 @@ const GoalsPage: React.FC = () => {
   return (
     <div className="container mx-auto sm:px-4 sm:py-8">
       <div className="max-w-4xl mx-auto">
-        
         {error && (
           <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
           </div>
         )}
-        
+
         {success && (
           <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
             Goal saved successfully!
           </div>
         )}
-        
 
         <GoalSettingForm
           initialGoal={formattedCurrentGoal}
@@ -221,14 +251,13 @@ const GoalsPage: React.FC = () => {
           isLoading={isLoading}
         />
 
-
-        <GoalsList 
+        <GoalsList
           onEditGoal={handleEditGoal}
           currentGoalId={currentGoal?.id}
           refreshTrigger={refreshTrigger}
           onGoalsChanged={handleDeleteSuccess}
         />
-        
+
         <ConfirmationModal
           isOpen={showModal}
           title={modalData.title}
@@ -241,4 +270,4 @@ const GoalsPage: React.FC = () => {
   );
 };
 
-export default GoalsPage; 
+export default GoalsPage;

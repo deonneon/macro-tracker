@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { FaGoogle, FaGithub } from "react-icons/fa";
+import { FaGoogle, FaGithub, FaUser } from "react-icons/fa";
 import { OAuthProvider } from "../services/AuthService";
 
 const LoginForm: React.FC = () => {
@@ -12,6 +12,8 @@ const LoginForm: React.FC = () => {
   const [isOAuthLoading, setIsOAuthLoading] = useState<OAuthProvider | null>(
     null
   );
+
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
 
   const { signIn, signInWithOAuth } = useAuth();
   const navigate = useNavigate();
@@ -59,8 +61,45 @@ const LoginForm: React.FC = () => {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setError(null);
+    setIsDemoLoading(true);
+
+    // Demo credentials
+    const demoEmail = "mac@mac.com";
+    const demoPassword = "macapple";
+
+    try {
+      const { error } = await signIn(demoEmail, demoPassword);
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      // Successfully logged in, redirect to home
+      navigate("/");
+    } catch (err) {
+      setError("An unexpected error occurred");
+      console.error(err);
+    } finally {
+      setIsDemoLoading(false);
+    }
+  };
+
   return (
     <div className="w-full max-w-md mx-auto mt-10">
+      <div className="flex justify-center items-center mb-4">
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={isOAuthLoading !== null || isDemoLoading}
+          className="flex justify-center items-center bg-green-600 border border-green-700 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          <FaUser className="mr-2" />
+          {isDemoLoading ? "Logging in..." : "Try Demo User"}
+        </button>
+      </div>
       <div className="bg-white rounded-lg shadow-md p-8">
         <h2 className="text-2xl font-bold mb-6 text-center">Log In</h2>
 
@@ -128,7 +167,7 @@ const LoginForm: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuthLogin("google")}
-              disabled={isOAuthLoading !== null}
+              disabled={isOAuthLoading !== null || isDemoLoading}
               className="flex justify-center items-center bg-white border border-gray-300 rounded-md px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               <FaGoogle className="mr-2" />
@@ -140,7 +179,7 @@ const LoginForm: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOAuthLogin("github")}
-              disabled={isOAuthLoading !== null}
+              disabled={isOAuthLoading !== null || isDemoLoading}
               className="flex justify-center items-center bg-gray-800 border border-gray-700 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               <FaGithub className="mr-2" />
