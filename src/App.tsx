@@ -6,7 +6,6 @@ import QueryProvider from "./components/QueryProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import SyncService from "./services/SyncService";
-import AuthDebugInfo from "./components/AuthDebugInfo";
 
 // Auth components
 import LoginForm from "./components/LoginForm";
@@ -66,8 +65,6 @@ const App: React.FC = () => {
                 </Route>
               </Route>
             </Routes>
-            {/* Add debug component - remove after fixing */}
-            <AuthDebugInfo />
           </BrowserRouter>
         </DietProvider>
       </AuthProvider>
