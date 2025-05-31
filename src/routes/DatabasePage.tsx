@@ -8,6 +8,8 @@ import {
   faSortDown,
   faFilter,
 } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "../contexts/AuthContext";
+import { supabase } from "../lib/supabase";
 
 function getTodayDate(): string {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -52,6 +54,7 @@ interface Food {
 
 const DatabasePage: React.FC = () => {
   const dietContext = useContext(DietContext);
+  const { user, session } = useAuth();
 
   if (!dietContext) {
     throw new Error("DatabasePage must be used within a DietProvider");
@@ -75,6 +78,25 @@ const DatabasePage: React.FC = () => {
 
   // State for filtered and sorted food data
   const [displayedFoods, setDisplayedFoods] = useState<[string, Food][]>([]);
+
+  // Add debug state
+  const [debugInfo, setDebugInfo] = useState<{
+    hasContext?: boolean;
+    databaseLength?: number;
+    user?: string;
+    session?: boolean;
+    directSupabaseCall?: {
+      success: boolean;
+      count: number;
+      error?: string;
+    };
+    envVars?: {
+      hasUrl: boolean;
+      hasKey: boolean;
+      url?: string;
+    };
+    error?: string;
+  } | null>(null);
 
   // Update displayed foods whenever database, search, sort, or filter changes
   useEffect(() => {
@@ -129,6 +151,46 @@ const DatabasePage: React.FC = () => {
     setDisplayedFoods(result);
   }, [database, searchQuery, sortField, sortDirection, filterOption]);
 
+  // Add debug effect
+  useEffect(() => {
+    const checkDebugInfo = async () => {
+      try {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+
+        // Test direct Supabase call
+        const { data: foods, error } = await supabase.from("foods").select("*");
+
+        setDebugInfo({
+          hasContext: !!dietContext,
+          databaseLength: Object.keys(database).length,
+          user: currentUser?.email || "No user",
+          session: !!currentSession,
+          directSupabaseCall: {
+            success: !error,
+            count: foods?.length || 0,
+            error: error?.message,
+          },
+          envVars: {
+            hasUrl: !!import.meta.env.VITE_SUPABASE_URL,
+            hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+            url: import.meta.env.VITE_SUPABASE_URL?.substring(0, 20) + "...",
+          },
+        });
+      } catch (error) {
+        setDebugInfo({
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    };
+
+    checkDebugInfo();
+  }, [dietContext, database, user, session]);
+
   const handleFoodClick = (foodName: string): void => {
     const foodDetails = {
       ...database[foodName],
@@ -171,6 +233,20 @@ const DatabasePage: React.FC = () => {
   return (
     <div className="w-full mx-auto sm:px-4 sm:py-8">
       <h2 className="mt-0 mb-4 text-xl font-semibold">Food Database</h2>
+
+      {/* Debug Info - Remove this after fixing */}
+      {process.env.NODE_ENV === "development" || import.meta.env.DEV ? (
+        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-400 rounded">
+          <h3 className="font-bold">Debug Info:</h3>
+          <pre className="text-xs">{JSON.stringify(debugInfo, null, 2)}</pre>
+        </div>
+      ) : (
+        // Show minimal debug in production
+        <div className="mb-2 text-xs text-gray-500">
+          Items: {displayedFoods.length} | User: {user?.email || "Anonymous"} |
+          Auth: {session ? "Yes" : "No"}
+        </div>
+      )}
 
       {/* Search and Filter Controls */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
