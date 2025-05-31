@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { FaGoogle, FaGithub, FaUser } from "react-icons/fa";
@@ -14,9 +14,19 @@ const LoginForm: React.FC = () => {
   );
 
   const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [shouldNavigateAfterAuth, setShouldNavigateAfterAuth] = useState(false);
 
-  const { signIn, signInWithOAuth } = useAuth();
+  const { signIn, signInWithOAuth, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
+
+  // Effect to handle navigation after successful authentication
+  useEffect(() => {
+    if (shouldNavigateAfterAuth && user && !authLoading) {
+      console.log("Auth context updated, navigating to diary...");
+      navigate("/diary");
+      setShouldNavigateAfterAuth(false);
+    }
+  }, [user, authLoading, shouldNavigateAfterAuth, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +72,14 @@ const LoginForm: React.FC = () => {
   };
 
   const handleDemoLogin = async () => {
+    // Don't proceed if auth context is still loading
+    if (authLoading) {
+      setError(
+        "Authentication system is still loading. Please wait a moment and try again."
+      );
+      return;
+    }
+
     setError(null);
     setIsDemoLoading(true);
 
@@ -69,19 +87,30 @@ const LoginForm: React.FC = () => {
     const demoEmail = "mac@mac.com";
     const demoPassword = "macapple";
 
+    console.log("Demo login attempt starting...");
+
     try {
       const { error } = await signIn(demoEmail, demoPassword);
 
       if (error) {
-        setError(error.message);
+        console.error("Demo login error:", error);
+        console.error("Error details:", {
+          message: error.message,
+          name: error.name || "unknown",
+        });
+        setError(`Demo login failed: ${error.message}`);
         return;
       }
 
-      // Successfully logged in, redirect to home
-      navigate("/");
+      console.log(
+        "Demo login successful, waiting for auth context to update..."
+      );
+
+      // Set flag to navigate once auth context updates
+      setShouldNavigateAfterAuth(true);
     } catch (err) {
-      setError("An unexpected error occurred");
-      console.error(err);
+      console.error("Demo login unexpected error:", err);
+      setError("An unexpected error occurred during demo login");
     } finally {
       setIsDemoLoading(false);
     }
@@ -93,11 +122,15 @@ const LoginForm: React.FC = () => {
         <button
           type="button"
           onClick={handleDemoLogin}
-          disabled={isOAuthLoading !== null || isDemoLoading}
-          className="flex justify-center items-center bg-green-600 border border-green-700 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          disabled={authLoading || isOAuthLoading !== null || isDemoLoading}
+          className="flex justify-center items-center bg-green-600 border border-green-700 rounded-md px-4 py-2 text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:shadow-outline disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FaUser className="mr-2" />
-          {isDemoLoading ? "Logging in..." : "Try Demo User"}
+          {authLoading
+            ? "Initializing..."
+            : isDemoLoading
+            ? "Logging in..."
+            : "Try Demo User"}
         </button>
       </div>
       <div className="bg-white rounded-lg shadow-md p-8">
