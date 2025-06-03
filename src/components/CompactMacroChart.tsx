@@ -15,8 +15,9 @@ import { Line } from 'react-chartjs-2';
 import { DietContext } from '../DietContext';
 import { format, subDays, isSameDay } from 'date-fns';
 import { MacroGoal } from '../types/goals';
-import { goalsTable, dailyDietTable } from '../lib/supabase';
+import { goalsTable } from '../lib/supabase';
 import { motion } from 'framer-motion';
+import { useDailyEntriesByDateRange } from '../hooks/useDailyEntries';
 
 // Register Chart.js components
 ChartJS.register(
@@ -37,13 +38,6 @@ interface CompactMacroChartProps {
 const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) => {
   const dietContext = useContext(DietContext);
   const [macroGoal, setMacroGoal] = useState<MacroGoal | null>(null);
-  const [periodData, setPeriodData] = useState<{
-    proteinPerDay: number[];
-    carbsPerDay: number[];
-    fatPerDay: number[];
-  }>({ proteinPerDay: [], carbsPerDay: [], fatPerDay: [] });
-  const [caloriesPerDay, setCaloriesPerDay] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   
   if (!dietContext) {
     throw new Error('CompactMacroChart must be used within a DietProvider');
@@ -85,7 +79,7 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
     fetchLatestGoal();
   }, []);
 
-  // Generate dates for the last 5 days, memoized
+  // Generate dates for the last 7 days, memoized
   const { dates, dateLabels } = useMemo(() => {
     const today = new Date();
     const datesArr: string[] = [];
@@ -103,73 +97,59 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
     return { dates: datesArr, dateLabels: dateLabelsArr };
   }, []); 
   
-  // Fetch data for the period
-  useEffect(() => {
-    const fetchDataInBatches = async (datesToFetch: string[]) => {
-      const proteinPerDay: number[] = Array(datesToFetch.length).fill(0);
-      const carbsPerDay: number[] = Array(datesToFetch.length).fill(0);
-      const fatPerDay: number[] = Array(datesToFetch.length).fill(0);
-      const caloriesPerDay: number[] = Array(datesToFetch.length).fill(0);
+  // Use React Query to fetch data for the date range
+  const startDate = dates[0];
+  const endDate = dates[dates.length - 1];
+  const { data: allEntries, isLoading } = useDailyEntriesByDateRange(startDate, endDate);
+  
+  // Process the data into daily totals
+  const { periodData, caloriesPerDay } = useMemo(() => {
+    const proteinPerDay: number[] = Array(dates.length).fill(0);
+    const carbsPerDay: number[] = Array(dates.length).fill(0);
+    const fatPerDay: number[] = Array(dates.length).fill(0);
+    const caloriesPerDay: number[] = Array(dates.length).fill(0);
+    
+    if (allEntries && Array.isArray(allEntries)) {
+      // Group entries by date
+      const entriesByDate: { [date: string]: typeof allEntries } = {};
+      allEntries.forEach(entry => {
+        if (!entriesByDate[entry.date]) {
+          entriesByDate[entry.date] = [];
+        }
+        entriesByDate[entry.date].push(entry);
+      });
       
-      try {
-        const batchPromises = datesToFetch.map((date, index) => 
-          dailyDietTable.getByDate(date)
-            .then(dailyEntries => {
-              if (Array.isArray(dailyEntries)) {
-                let dailyTotals = dailyEntries.reduce((acc, entry) => ({
-                  protein: acc.protein + (entry.protein || 0),
-                  carbs: acc.carbs + (entry.carbs || 0),
-                  fat: acc.fat + (entry.fat || 0),
-                  calories: acc.calories + (entry.calories || 0),
-                  hasCalories: acc.hasCalories || (typeof entry.calories === 'number')
-                }), { protein: 0, carbs: 0, fat: 0, calories: 0, hasCalories: false });
-                
-                proteinPerDay[index] = Math.round(dailyTotals.protein);
-                carbsPerDay[index] = Math.round(dailyTotals.carbs);
-                fatPerDay[index] = Math.round(dailyTotals.fat);
-                
-                // Use calories from DB if available, else calculate
-                if (dailyTotals.hasCalories) {
-                  caloriesPerDay[index] = Math.round(dailyTotals.calories);
-                } else {
-                  caloriesPerDay[index] = Math.round(
-                    dailyTotals.protein * 4 + dailyTotals.carbs * 4 + dailyTotals.fat * 9
-                  );
-                }
-              }
-            })
-            .catch(error => {
-              console.warn(`Error fetching data for ${date}:`, error.message || error);
-            })
-        );
+      // Calculate totals for each date
+      dates.forEach((date, index) => {
+        const dailyEntries = entriesByDate[date] || [];
+        const dailyTotals = dailyEntries.reduce((acc, entry) => ({
+          protein: acc.protein + (entry.protein || 0),
+          carbs: acc.carbs + (entry.carbs || 0),
+          fat: acc.fat + (entry.fat || 0),
+          calories: acc.calories + (entry.calories || 0),
+          hasCalories: acc.hasCalories || (typeof entry.calories === 'number')
+        }), { protein: 0, carbs: 0, fat: 0, calories: 0, hasCalories: false });
         
-        await Promise.all(batchPromises);
-        return { proteinPerDay, carbsPerDay, fatPerDay, caloriesPerDay };
-      } catch (error) {
-        console.error('Error fetching period data:', error);
-        return { proteinPerDay, carbsPerDay, fatPerDay, caloriesPerDay };
-      }
-    };
+        proteinPerDay[index] = Math.round(dailyTotals.protein);
+        carbsPerDay[index] = Math.round(dailyTotals.carbs);
+        fatPerDay[index] = Math.round(dailyTotals.fat);
+        
+        // Use calories from DB if available, else calculate
+        if (dailyTotals.hasCalories) {
+          caloriesPerDay[index] = Math.round(dailyTotals.calories);
+        } else {
+          caloriesPerDay[index] = Math.round(
+            dailyTotals.protein * 4 + dailyTotals.carbs * 4 + dailyTotals.fat * 9
+          );
+        }
+      });
+    }
     
-    const fetchPeriodData = async () => {
-      setIsLoading(true);
-      try {
-        const fetchedData = await fetchDataInBatches(dates);
-        setPeriodData({
-          proteinPerDay: fetchedData.proteinPerDay,
-          carbsPerDay: fetchedData.carbsPerDay,
-          fatPerDay: fetchedData.fatPerDay
-        });
-        setCaloriesPerDay(fetchedData.caloriesPerDay);
-      } catch (error) {
-        console.error('Error fetching period data:', error);
-      } finally {
-        setIsLoading(false);
-      }
+    return {
+      periodData: { proteinPerDay, carbsPerDay, fatPerDay },
+      caloriesPerDay
     };
-    
-    fetchPeriodData();
-  }, [dates]);
+  }, [allEntries, dates]);
   
   // Prepare chart data for protein
   const proteinData = {

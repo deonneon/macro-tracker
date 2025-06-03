@@ -77,6 +77,21 @@ export const useAddDailyEntry = () => {
       
       // Invalidate the specific date query to refetch entries for that date
       queryClient.invalidateQueries({ queryKey: dailyEntriesKeys.byDate(date) });
+      
+      // Also invalidate any date range queries that might include this date
+      queryClient.invalidateQueries({ 
+        queryKey: ['daily-entries', 'by-date-range'],
+        predicate: (query) => {
+          // Check if this date falls within any cached date range
+          const queryKey = query.queryKey as string[];
+          if (queryKey.length >= 4 && queryKey[1] === 'by-date-range') {
+            const startDate = queryKey[2];
+            const endDate = queryKey[3];
+            return date >= startDate && date <= endDate;
+          }
+          return false;
+        }
+      });
     },
   });
 };
@@ -125,6 +140,21 @@ export const useDeleteDailyEntry = () => {
     onSettled: (data) => {
       if (data && data.date) {
         queryClient.invalidateQueries({ queryKey: dailyEntriesKeys.byDate(data.date) });
+        
+        // Also invalidate any date range queries that might include this date
+        queryClient.invalidateQueries({ 
+          queryKey: ['daily-entries', 'by-date-range'],
+          predicate: (query) => {
+            // Check if this date falls within any cached date range
+            const queryKey = query.queryKey as string[];
+            if (queryKey.length >= 4 && queryKey[1] === 'by-date-range') {
+              const startDate = queryKey[2];
+              const endDate = queryKey[3];
+              return data.date >= startDate && data.date <= endDate;
+            }
+            return false;
+          }
+        });
       }
     },
   });
@@ -155,6 +185,24 @@ export const useUpdateDailyEntry = () => {
       if (newDate && newDate !== originalDate) {
         queryClient.invalidateQueries({ queryKey: dailyEntriesKeys.byDate(newDate) });
       }
+      
+      // Invalidate date range queries for both dates
+      const datesToInvalidate = newDate && newDate !== originalDate ? [originalDate, newDate] : [originalDate];
+      
+      datesToInvalidate.forEach(date => {
+        queryClient.invalidateQueries({ 
+          queryKey: ['daily-entries', 'by-date-range'],
+          predicate: (query) => {
+            const queryKey = query.queryKey as string[];
+            if (queryKey.length >= 4 && queryKey[1] === 'by-date-range') {
+              const startDate = queryKey[2];
+              const endDate = queryKey[3];
+              return date >= startDate && date <= endDate;
+            }
+            return false;
+          }
+        });
+      });
     },
   });
 }; 
