@@ -224,6 +224,13 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
             <th
               className="px-1 sm:px-4 py-3 text-center"
               tabIndex={0}
+              aria-label="Calories"
+            >
+              {isMobile ? "Cal" : "Calories"}
+            </th>
+            <th
+              className="px-1 sm:px-4 py-3 text-center"
+              tabIndex={0}
               aria-label="Protein (g)"
             >
               Protein
@@ -241,13 +248,6 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
               aria-label="Fat (g)"
             >
               Fat
-            </th>
-            <th
-              className="px-1 sm:px-4 py-3 text-center"
-              tabIndex={0}
-              aria-label="Calories"
-            >
-              Calories
             </th>
             <th
               className="px-1 sm:px-4 py-3 text-center"
@@ -286,6 +286,9 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
                     {entry.unit || ""}
                   </td>
                   <td className="px-1 sm:px-4 py-2 text-center">
+                    {entry.calories}
+                  </td>
+                  <td className="px-1 sm:px-4 py-2 text-center">
                     {entry.protein}g
                   </td>
                   <td className="px-1 sm:px-4 py-2 text-center">
@@ -293,9 +296,6 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
                   </td>
                   <td className="px-1 sm:px-4 py-2 text-center">
                     {entry.fat || 0}g
-                  </td>
-                  <td className="px-1 sm:px-4 py-2 text-center">
-                    {entry.calories}
                   </td>
                   <td className="px-1 sm:px-4 py-2 text-center">
                     <div className="invisible group-hover:visible group-focus-within:visible flex items-center justify-center gap-1">
