@@ -184,7 +184,11 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         tension: 0.3,
         pointRadius: (ctx: { dataIndex: number }) => {
           const index = ctx.dataIndex;
-          // Larger points for first and last items
+          // Smaller points on mobile, larger on desktop
+          const isMobile = window.innerWidth < 768;
+          if (isMobile) {
+            return index === 0 || index === periodData.proteinPerDay.length - 1 ? 2 : 1.5;
+          }
           return index === 0 || index === periodData.proteinPerDay.length - 1 ? 3 : 2.5;
         },
         pointBackgroundColor: 'rgba(231, 76, 60, 0.9)',
@@ -207,7 +211,11 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         tension: 0.3,
         pointRadius: (ctx: { dataIndex: number }) => {
           const index = ctx.dataIndex;
-          // Larger points for first and last items
+          // Smaller points on mobile, larger on desktop
+          const isMobile = window.innerWidth < 768;
+          if (isMobile) {
+            return index === 0 || index === caloriesPerDay.length - 1 ? 2 : 1.5;
+          }
           return index === 0 || index === caloriesPerDay.length - 1 ? 3 : 2.5;
         },
         pointBackgroundColor: 'rgba(52, 152, 219, 0.9)',
@@ -225,8 +233,8 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
       padding: {
         left: 0,
         right: 0,
-        top: 4,
-        bottom: 2
+        top: 8,
+        bottom: 8
       }
     },
     scales: {
@@ -236,11 +244,11 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
         ticks: {
           maxRotation: 0,
           font: {
-            size: 10,
+            size: 9,
             family: "'Roboto', sans-serif"
           },
           autoSkip: true,
-          maxTicksLimit: 7
+          maxTicksLimit: 5
         }
       },
       y: {
@@ -337,14 +345,14 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
           </div>
         </div>
       ) : (
-        <div className="flex gap-2 sm:gap-4 md:gap-8 items-stretch" style={{ height: `${height}px` }}>
+        <div className="flex gap-2 sm:gap-4 md:gap-8 items-stretch  mb-1 " style={{ height: `${height}px` }}>
           <div
-            className="w-1/2 bg-white rounded-lg shadow p-1 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden"
+            className="w-1/2 bg-white rounded-lg shadow p-2 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden"
             aria-label="Protein chart card"
             tabIndex={0}
           >
             <motion.div
-              className="flex-1 flex items-end w-full"
+              className="flex-1 flex items-end w-full min-h-0"
               variants={chartVariants}
               initial="hidden"
               animate="visible"
@@ -353,12 +361,12 @@ const CompactMacroChart: React.FC<CompactMacroChartProps> = ({ height = 180 }) =
             </motion.div>
           </div>
           <div
-            className="w-1/2 bg-white rounded-lg shadow p-1 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden"
+            className="w-1/2 bg-white rounded-lg shadow p-2 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden"
             aria-label="Calories chart card"
             tabIndex={0}
           >
             <motion.div
-              className="flex-1 flex items-end w-full"
+              className="flex-1 flex items-end w-full min-h-0"
               variants={chartVariants}
               initial="hidden"
               animate="visible"

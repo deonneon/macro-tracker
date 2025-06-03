@@ -15,6 +15,7 @@ const DiaryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isQuickFoodModalOpen, setIsQuickFoodModalOpen] = useState(false);
+  const [chartHeight, setChartHeight] = useState(180);
   const drawerRef = useRef<HTMLDivElement>(null);
 
   if (!dietContext) {
@@ -51,6 +52,22 @@ const DiaryPage: React.FC = () => {
     };
 
     fetchLatestGoal();
+  }, []);
+
+  // Handle responsive chart height
+  useEffect(() => {
+    const handleResize = () => {
+      setChartHeight(window.innerWidth < 768 ? 120 : 180);
+    };
+
+    // Set initial height
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Get today's food entries
@@ -152,7 +169,7 @@ const DiaryPage: React.FC = () => {
             variants={itemVariants}
           >
             <div className="w-full px-1">
-              <CompactMacroChart height={180} />
+              <CompactMacroChart height={chartHeight} />
             </div>
           </motion.div>
           {!isLoading && !currentGoal && (

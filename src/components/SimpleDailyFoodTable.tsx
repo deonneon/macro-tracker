@@ -42,6 +42,8 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
 }) => {
   const dietContext = useContext(DietContext);
 
+  const isMobile = window.innerWidth < 768;
+
   const handleAddFood = async (entry: FoodEntry) => {
     if (!dietContext) return;
     const { database, addFoodEntryToDailyDiet } = dietContext;
@@ -217,7 +219,7 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
               tabIndex={0}
               aria-label="Serving Size"
             >
-              Serving Size
+              Serving {isMobile ? "" : "Size"}
             </th>
             <th
               className="px-1 sm:px-4 py-3 text-center"
@@ -379,7 +381,7 @@ const SimpleDailyFoodTable: React.FC<SimpleDailyFoodTableProps> = ({
         </tbody>
         <tfoot>
           <tr className="bg-blue-50 font-semibold text-xs sm:text-sm">
-            <td className="px-1 sm:px-4 py-2">Daily Total</td>
+            <td className="px-1 sm:px-4 py-2">{isMobile ? "Totals" : "Daily Total"}</td>
             <td className="px-1 sm:px-4 py-2 text-center"></td>
             <td className="px-1 sm:px-4 py-2 text-center">
               {dailyTotals.protein.toFixed(1)}g
